@@ -1,3 +1,4 @@
+// src/PrintOptionsModal.js
 import React from 'react';
 
 const PrintOptionsModal = ({
@@ -9,16 +10,34 @@ const PrintOptionsModal = ({
   handleSelectEmployeesForPrint,
   handleClosePrintOptions,
   executePrint,
-  payslip // Pass payslip to check if current payslip exists
+  payslip,
+  payslipDetails,
+  setPayslipDetails
 }) => {
   if (!showPrintOptionsModal) {
     return null;
   }
 
+  const handleBookkeeperNameChange = (e) => {
+    setPayslipDetails(prev => ({ ...prev, bookkeeperName: e.target.value }));
+  };
+
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white p-8 rounded-lg shadow-2xl w-full max-w-md">
         <h2 className="text-2xl font-bold mb-6 text-gray-800 text-center">Print Options</h2>
+
+        <div className="mb-4">
+          <label htmlFor="bookkeeperName" className="block text-sm font-medium text-gray-700">Bookkeeper's Name</label>
+          <input
+            type="text"
+            id="bookkeeperName"
+            value={(payslipDetails && payslipDetails.bookkeeperName) || ''}
+            onChange={handleBookkeeperNameChange}
+            className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            placeholder="Enter Bookkeeper's Name"
+          />
+        </div>
 
         <div className="mb-4">
           <label className="inline-flex items-center">
@@ -47,7 +66,7 @@ const PrintOptionsModal = ({
               checked={printOption === 'selected'}
               onChange={(e) => setPrintOption(e.target.value)}
             />
-            <span className="ml-2 text-gray-700">Print Selected Employees (2 copies each)</span>
+            <span className="ml-2 text-gray-700">Print Selected Employees (2 payslips per page)</span>
           </label>
           {printOption === 'selected' && (
             <select
@@ -79,7 +98,7 @@ const PrintOptionsModal = ({
               checked={printOption === 'all'}
               onChange={(e) => setPrintOption(e.target.value)}
             />
-            <span className="ml-2 text-gray-700">Print All Employees (2 copies each)</span>
+            <span className="ml-2 text-gray-700">Print All Employees (2 payslips per page)</span>
           </label>
           {employees.length === 0 && printOption === 'all' && (
             <p className="text-red-500 text-sm ml-6 mt-1">No employees found to print.</p>

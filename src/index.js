@@ -1,11 +1,15 @@
+// src/index.js
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import './index.css'; // Assuming you have Tailwind CSS setup or a basic CSS file
 import App from './App';
+import Auth from './Auth';
+import './index.css';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-    <App />
+    <Auth onAuthChange={(userId) => {}}>
+      <App />
+    </Auth>
   </React.StrictMode>
 );

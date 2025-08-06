@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Import Google Font - Inter */
+/* This ensures the 'Inter' font is available for your entire application. */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+/* Basic body styles */
+body {
+  font-family: 'Inter', sans-serif; /* Apply the Inter font globally */
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Custom keyframe animation for a slow, subtle bounce effect */
+@keyframes bounce-slow {
+  0%, 100% {
+    transform: translateY(0); /* Start and end at original position */
+  }
+  50% {
+    transform: translateY(-5px); /* Move up slightly at 50% of the animation */
+  }
+}
+
+/* Apply the custom animation to elements with this class */
+.animate-bounce-slow {
+  animation: bounce-slow 4s infinite ease-in-out; /* 4-second duration, infinite loop, smooth easing */
+}
