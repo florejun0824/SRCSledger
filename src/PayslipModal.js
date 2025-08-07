@@ -3,7 +3,7 @@ import React from 'react';
 import PayslipDisplay from './PayslipDisplay';
 import PrintManager from './PrintManager';
 
-const PayslipModal = ({ payslip, onClose, employees, payslipDetails, setPayslipDetails }) => {
+const PayslipModal = ({ payslip, onClose, employees, payslipDetails, setPayslipDetails, startDate, endDate }) => {
   if (!payslip) {
     return null;
   }
@@ -15,7 +15,18 @@ const PayslipModal = ({ payslip, onClose, employees, payslipDetails, setPayslipD
 
         <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
-        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+        <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full relative">
+          
+          <button
+              onClick={onClose}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+              aria-label="Close"
+          >
+              <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+          </button>
+          
           <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
             <div className="sm:flex sm:items-start">
               <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
@@ -42,6 +53,8 @@ const PayslipModal = ({ payslip, onClose, employees, payslipDetails, setPayslipD
                 employees={employees}
                 payslipDetails={payslipDetails}
                 setPayslipDetails={setPayslipDetails}
+                startDate={startDate}
+                endDate={endDate}
               />
             </div>
           </div>

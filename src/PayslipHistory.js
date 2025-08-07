@@ -1,125 +1,94 @@
 // src/PayslipHistory.js
-import React, { useState, useEffect } from 'react';
-import PayslipModal from './PayslipModal';
-import { Timestamp } from 'firebase/firestore';
+import React from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faTrashAlt } from '@fortawesome/free-solid-svg-icons';
 
-const PayslipHistory = ({ payslipHistory, employees, payslipDetails, setPayslipDetails, handleDeletePayslip }) => {
-  const [selectedPayslip, setSelectedPayslip] = useState(null);
-  const [startDateFilter, setStartDateFilter] = useState('');
-  const [endDateFilter, setEndDateFilter] = useState('');
-  const [filteredPayslips, setFilteredPayslips] = useState([]);
+const PayslipHistory = ({
+    payslipHistory,
+    employees,
+    handleDeletePayslip,
+    setPayslip,
+    startDate, // New prop for filtering
+    endDate,   // New prop for filtering
+}) => {
+    const getEmployeeName = (employeeDocId) => {
+        const employee = employees.find((emp) => emp.id === employeeDocId);
+        return employee ? employee.name : 'Unknown Employee';
+    };
 
-  useEffect(() => {
-    if (startDateFilter && endDateFilter) {
-      const start = new Date(startDateFilter);
-      const end = new Date(endDateFilter);
-      start.setHours(0, 0, 0, 0);
-      end.setHours(23, 59, 59, 999);
+    const handleSelectPayslip = (payslip) => {
+        setPayslip(payslip); // This opens the modal
+    };
 
-      const tempFilteredPayslips = payslipHistory.filter(payslip => {
-        const payslipDate = payslip.generatedAt instanceof Timestamp ? payslip.generatedAt.toDate() : payslip.generatedAt;
-        const payslipPeriodStart = new Date(payslip.startDate);
-        const payslipPeriodEnd = new Date(payslip.endDate);
-        return payslipPeriodStart >= start && payslipPeriodEnd <= end;
-      });
-      setFilteredPayslips(tempFilteredPayslips);
-    } else {
-      setFilteredPayslips([]);
-    }
-  }, [payslipHistory, startDateFilter, endDateFilter]);
+    // --- Date Filtering Logic ---
+    const startRange = new Date(startDate);
+    startRange.setHours(0, 0, 0, 0); // Set to the beginning of the start day
 
-  const handleOpenModal = (payslip) => {
-    setSelectedPayslip(payslip);
-  };
+    const endRange = new Date(endDate);
+    endRange.setHours(23, 59, 59, 999); // Set to the end of the end day
 
-  const handleCloseModal = () => {
-    setSelectedPayslip(null);
-  };
+    const filteredPayslips = payslipHistory.filter(p => {
+        if (!p.startDate) return false;
+        // Create a date object from the payslip's start date string
+        // Appending T00:00:00 avoids potential timezone-related parsing issues
+        const payslipDate = new Date(`${p.startDate}T00:00:00`);
+        // Check if the payslip's period starts within the selected range
+        return payslipDate >= startRange && payslipDate <= endRange;
+    });
+    // --- End of Filtering Logic ---
 
-  return (
-    <div className="bg-white rounded-2xl shadow-lg p-6 w-full">
-      <h2 className="text-xl font-bold text-gray-800 mb-4">Payslip History</h2>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        <div>
-          <label htmlFor="startDateFilter" className="block text-sm font-medium text-gray-700 mb-1">From</label>
-          <input
-            type="date"
-            id="startDateFilter"
-            value={startDateFilter}
-            onChange={(e) => setStartDateFilter(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-          />
-        </div>
-        <div>
-          <label htmlFor="endDateFilter" className="block text-sm font-medium text-gray-700 mb-1">To</label>
-          <input
-            type="date"
-            id="endDateFilter"
-            value={endDateFilter}
-            onChange={(e) => setEndDateFilter(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-          />
-        </div>
-      </div>
-      
-      <div className="h-[500px] overflow-y-auto pr-2 -mr-2">
-        {(startDateFilter && endDateFilter) ? (
-          filteredPayslips.length > 0 ? (
-            filteredPayslips.map((payslip) => (
-              <div
-                key={payslip.id}
-                className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-3 flex items-center justify-between hover:bg-gray-100 transition duration-200"
-              >
-                <div>
-                  <p className="font-semibold text-gray-800">{payslip.name}</p>
-                  <p className="text-sm text-gray-500">
-                    {payslip.startDate && payslip.endDate
-                      ? `${new Date(payslip.startDate).toLocaleDateString()} - ${new Date(payslip.endDate).toLocaleDateString()}`
-                      : 'N/A'}
-                  </p>
+    return (
+        <div className="p-1">
+            <h2 className="text-3xl font-bold text-gray-800 mb-6">Payslip History</h2>
+            {filteredPayslips.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                    {filteredPayslips.map((payslip) => (
+                        <div
+                            key={payslip.id}
+                            onClick={() => handleSelectPayslip(payslip)}
+                            className="p-5 border rounded-xl shadow-sm cursor-pointer transition-all duration-300 ease-in-out hover:shadow-lg hover:-translate-y-1 bg-white border-gray-200 group"
+                        >
+                            <div className="flex justify-between items-start mb-3">
+                                <h3 className="font-bold text-lg text-gray-900 group-hover:text-indigo-600 transition-colors">
+                                    {getEmployeeName(payslip.employeeDocId)}
+                                </h3>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation(); // Prevent card click when deleting
+                                        handleDeletePayslip(payslip.id);
+                                    }}
+                                    className="text-gray-400 hover:text-red-600 p-1 rounded-full transition-colors duration-200 opacity-50 group-hover:opacity-100"
+                                >
+                                    <FontAwesomeIcon icon={faTrashAlt} />
+                                </button>
+                            </div>
+                            <div className="space-y-1 text-sm text-gray-600">
+                                <p>
+                                    <span className="font-semibold">Period:</span> {payslip.startDate} to {payslip.endDate}
+                                </p>
+                                <p>
+                                    <span className="font-semibold">Generated:</span> {new Date(payslip.generatedAt.seconds * 1000).toLocaleDateString()}
+                                </p>
+                                <p className="text-lg font-semibold text-green-600 pt-2 mt-2 border-t border-gray-100">
+                                    {new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP' }).format(payslip.netSalary)}
+                                </p>
+                            </div>
+                        </div>
+                    ))}
                 </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleOpenModal(payslip);
-                    }}
-                    className="px-4 py-2 text-sm bg-indigo-500 text-white rounded-lg shadow-md hover:bg-indigo-600 transition duration-300"
-                  >
-                    View
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (window.confirm("Are you sure you want to delete this payslip? This action cannot be undone.")) {
-                        handleDeletePayslip(payslip.id);
-                      }
-                    }}
-                    className="px-4 py-2 text-sm bg-red-500 text-white rounded-lg shadow-md hover:bg-red-600 transition duration-300"
-                  >
-                    Delete
-                  </button>
+            ) : (
+                <div className="text-center py-16 px-6 bg-gray-50 rounded-lg">
+                    <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                        <path vectorEffect="non-scaling-stroke" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                    </svg>
+                    <h3 className="mt-2 text-lg font-medium text-gray-900">No Payslips Found</h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                        There are no payslips recorded for the selected date range. Please try adjusting the dates.
+                    </p>
                 </div>
-              </div>
-            ))
-          ) : (
-            <p className="text-center text-gray-500 py-10">No payslips found for the selected date range.</p>
-          )
-        ) : (
-          <p className="text-center text-gray-500 py-10">Please select a date range to view payslip history.</p>
-        )}
-      </div>
-
-      <PayslipModal
-        payslip={selectedPayslip}
-        onClose={handleCloseModal}
-        employees={employees}
-        payslipDetails={payslipDetails}
-        setPayslipDetails={setPayslipDetails}
-      />
-    </div>
-  );
+            )}
+        </div>
+    );
 };
 
 export default PayslipHistory;

@@ -1,59 +1,71 @@
-import React, { useState } from 'react';
+import React from 'react';
 import PayslipDisplay from './PayslipDisplay';
 import { getSssContribution, getPhilhealthContribution, getPagibigContribution, getCeapContribution } from './utils';
 
-const PayslipGenerator = ({ employee }) => {
-  const [payslipDetails, setPayslipDetails] = useState({
-    startDate: '',
-    endDate: '',
-    bookkeeperName: '',
-    employeeSignatoryName: '',
-  });
-  const [payslip, setPayslip] = useState(null);
+const PayslipGenerator = ({ employee, startDate, endDate, handleGeneratePayslip, payslip, setPayslip }) => {
+  if (!employee) return null;
 
-  const generatePayslip = () => {
-    if (!employee) return;
-    
+  const handleGenerate = () => {
+    // This function will be called from the parent component
+    // It is responsible for generating the payslip object
     const basic = parseFloat(employee.basicSalary) || 0;
     const costOfLivingAllowance = parseFloat(employee.costOfLivingAllowance) || 0;
-    const totalOtherDeductions = (employee.otherDeductions || []).reduce((sum, ded) => sum + (parseFloat(ded.amount) || 0), 0);
-    
-    const sss = getSssContribution(basic);
-    const philhealth = getPhilhealthContribution(basic);
-    const pagibig = getPagibigContribution(basic);
-    const ceap = getCeapContribution(basic);
 
+    // Deductions from App.js's initialEmployeeState
+    const sssLoan = parseFloat(employee.sssLoan) || 0;
+    const pagibigLoanSTL = parseFloat(employee.pagibigLoanSTL) || 0;
+    const pagibigLoanCL = parseFloat(employee.pagibigLoanCL) || 0;
+    const personalLoan = parseFloat(employee.personalLoan) || 0;
+    const cashAdvance = parseFloat(employee.cashAdvance) || 0;
+    const canteen = parseFloat(employee.canteen) || 0;
+    
+    // Other Deductions
+    const otherDeductions = (employee.otherDeductions || []).reduce((sum, ded) => sum + (parseFloat(ded.amount) || 0), 0);
+    const tithings = parseFloat(employee.tithings) || 0; // Assuming tithings is part of employee state or passed separately
+
+    // Social Contributions
+    const sssContribution = getSssContribution(basic);
+    const philhealthContribution = getPhilhealthContribution(basic);
+    const pagibigContribution = getPagibigContribution(basic);
+    const ceapContribution = getCeapContribution(basic);
+
+    // Totals
     const grossSalary = basic + costOfLivingAllowance;
-    const totalDeductions = totalOtherDeductions + sss + philhealth + pagibig + ceap;
+    const totalDeductions = sssContribution + philhealthContribution + pagibigContribution + ceapContribution + sssLoan + pagibigLoanSTL + pagibigLoanCL + personalLoan + cashAdvance + canteen + otherDeductions + tithings;
     const netSalary = grossSalary - totalDeductions;
 
-    setPayslip({
-      ...employee,
-      ...payslipDetails,
+    const newPayslip = {
+      name: employee.name,
+      employeeId: employee.employeeId,
+      // Use the dates passed as props instead of local state
+      startDate: startDate,
+      endDate: endDate,
+      basicSalary: basic,
+      costOfLivingAllowance: costOfLivingAllowance,
       grossSalary,
+      sssContribution,
+      philhealthContribution,
+      pagibigContribution,
+      ceapContribution,
+      tithings,
+      pagibigLoanSTL,
+      pagibigLoanCL,
+      sssLoan,
+      personalLoan,
+      cashAdvance,
+      canteen,
+      otherDeductions: employee.otherDeductions,
       totalDeductions,
       netSalary,
-      sssContribution: sss,
-      philhealthContribution: philhealth,
-      pagibigContribution: pagibig,
-      ceapContribution: ceap,
-      totalOtherDeductions,
-    });
+    };
+    
+    setPayslip(newPayslip);
   };
-  
-  // ... other handlers like handlePayslipDetailsChange
 
   return (
     <div>
-      {/* Inputs for payslipDetails (start date, end date, etc.) */}
-      <div className="mb-8 text-center">
-        <button
-          onClick={generatePayslip}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg shadow-xl"
-        >
-          Generate Payslip
-        </button>
-      </div>
+      {/* ... other PayslipGenerator JSX, if any ... */}
+      <button onClick={handleGenerate}>Generate Payslip</button>
       {payslip && <PayslipDisplay payslipData={payslip} />}
     </div>
   );
