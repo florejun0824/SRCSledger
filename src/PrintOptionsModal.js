@@ -3,141 +3,110 @@ import React from 'react';
 
 const PrintOptionsModal = ({
   showPrintOptionsModal,
-  handleClosePrintOptions, // ✅ FIXED: Use the correct prop name
+  handleClosePrintOptions,
   printOption,
   setPrintOption,
-  employees,
-  selectedEmployeesForPrint,
-  handleSelectEmployeesForPrint,
   executePrint,
-  payslip,
-  payslipDetails,
-  setPayslipDetails
+  startDate,
+  setStartDate,
+  endDate,
+  setEndDate,
+  isPayslipPreview,
 }) => {
-  if (!showPrintOptionsModal) {
-    return null;
-  }
+  if (!showPrintOptionsModal) return null;
 
-  const handleBookkeeperNameChange = (e) => {
-    setPayslipDetails(prev => ({ ...prev, bookkeeperName: e.target.value }));
+  const handlePrint = () => {
+    executePrint();
   };
 
-  const employeesToDisplay = employees || [];
+  const isPrintButtonDisabled = printOption === 'all' && (!startDate || !endDate);
 
   return (
-    <div className="fixed inset-0 bg-gray-900 bg-opacity-70 flex items-center justify-center p-4 z-50">
-      <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-lg transform scale-100 transition-transform">
-        <h2 className="text-3xl font-bold mb-6 text-gray-800 text-center">Print Payslips</h2>
-
-        {/* Bookkeeper's Name Input */}
-        <div className="mb-6">
-          <label htmlFor="bookkeeperName" className="block text-sm font-medium text-gray-700 mb-1">Bookkeeper's Name</label>
-          <input
-            type="text"
-            id="bookkeeperName"
-            value={payslipDetails?.bookkeeperName || ''}
-            onChange={handleBookkeeperNameChange}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-gray-800"
-            placeholder="Enter Bookkeeper's Name"
-          />
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
+      <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-lg transform transition-all scale-100 opacity-100">
+        <div className="flex justify-between items-center mb-4 border-b pb-2">
+          <h2 className="text-2xl font-bold text-gray-800">Print Options</h2>
+          <button onClick={handleClosePrintOptions} className="text-gray-400 hover:text-gray-600 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
-        
-        {/* Print Options */}
-        <div className="space-y-4 mb-6">
-          {/* Print Current Payslip */}
-          <div className="flex items-start">
-            <input
-              type="radio"
-              className="form-radio h-5 w-5 text-indigo-600 mt-1"
-              name="printOption"
-              id="printCurrent"
-              value="current"
-              checked={printOption === 'current'}
-              onChange={(e) => setPrintOption(e.target.value)}
-            />
-            <label htmlFor="printCurrent" className="ml-3 text-gray-700">
-              <span className="font-semibold block">Print Current Payslip</span>
-              <span className="text-sm text-gray-500 block">(2 copies on a single page)</span>
-              {!payslip && printOption === 'current' && (
-                <p className="text-red-500 text-sm mt-1">No payslip generated to print.</p>
-              )}
-            </label>
-          </div>
 
-          {/* Print Selected Employees */}
-          <div className="flex flex-col items-start">
-            <div className="flex items-center">
+        {/* Print Type Selection */}
+        <div className="mb-6">
+          <p className="text-md font-semibold text-gray-700 mb-3">Select what to print:</p>
+          <div className="space-y-3">
+            <label className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${printOption === 'current' ? 'border-indigo-500 bg-indigo-50' : 'border-gray-300 hover:border-gray-400'}`}>
               <input
                 type="radio"
-                className="form-radio h-5 w-5 text-indigo-600"
                 name="printOption"
-                id="printSelected"
-                value="selected"
-                checked={printOption === 'selected'}
-                onChange={(e) => setPrintOption(e.target.value)}
+                value="current"
+                checked={printOption === 'current'}
+                onChange={() => setPrintOption('current')}
+                className="form-radio h-5 w-5 text-indigo-600 transition-colors cursor-pointer"
+                disabled={isPayslipPreview}
               />
-              <label htmlFor="printSelected" className="ml-3 text-gray-700">
-                <span className="font-semibold block">Print Selected Employees</span>
-                <span className="text-sm text-gray-500 block">(2 payslips per page)</span>
-              </label>
-            </div>
-            {printOption === 'selected' && (
-              <select
-                multiple
-                className="w-full mt-2 p-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 h-32"
-                onChange={handleSelectEmployeesForPrint}
-                value={selectedEmployeesForPrint}
-              >
-                {employeesToDisplay.length === 0 ? (
-                  <option value="" disabled>No employees available</option>
-                ) : (
-                  employeesToDisplay.map(emp => (
-                    <option key={emp.id} value={emp.id}>
-                      {emp.name} (ID: {emp.employeeId || 'N/A'})
-                    </option>
-                  ))
-                )}
-              </select>
-            )}
-          </div>
-
-          {/* Print All Employees */}
-          <div className="flex items-start">
-            <input
-              type="radio"
-              className="form-radio h-5 w-5 text-indigo-600 mt-1"
-              name="printOption"
-              id="printAll"
-              value="all"
-              checked={printOption === 'all'}
-              onChange={(e) => setPrintOption(e.target.value)}
-            />
-            <label htmlFor="printAll" className="ml-3 text-gray-700">
-              <span className="font-semibold block">Print All Employees</span>
-              <span className="text-sm text-gray-500 block">(2 payslips per page)</span>
-              {employeesToDisplay.length === 0 && printOption === 'all' && (
-                <p className="text-red-500 text-sm mt-1">No employees found to print.</p>
-              )}
+              <span className="ml-3 text-gray-700 font-medium">Print Current Payslip</span>
             </label>
+            {!isPayslipPreview && (
+              <label className={`flex flex-col p-4 border rounded-lg cursor-pointer transition-colors ${printOption === 'all' ? 'border-indigo-500 bg-indigo-50' : 'border-gray-300 hover:border-gray-400'}`}>
+                <div className="flex items-center mb-2">
+                  <input
+                    type="radio"
+                    name="printOption"
+                    value="all"
+                    checked={printOption === 'all'}
+                    onChange={() => setPrintOption('all')}
+                    className="form-radio h-5 w-5 text-indigo-600 transition-colors cursor-pointer"
+                  />
+                  <span className="ml-3 text-gray-700 font-medium">Print All Payslips in Date Range</span>
+                </div>
+                
+                {/* Date Range Picker - only visible when "Print All" is selected */}
+                {printOption === 'all' && (
+                  <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="startDate" className="block text-sm font-medium text-gray-600 mb-1">Start Date</label>
+                      <input
+                        id="startDate"
+                        type="date"
+                        value={startDate ? new Date(startDate).toISOString().split('T')[0] : ''}
+                        onChange={(e) => setStartDate(new Date(e.target.value))}
+                        className="w-full border-gray-300 rounded-md shadow-sm p-2 text-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="endDate" className="block text-sm font-medium text-gray-600 mb-1">End Date</label>
+                      <input
+                        id="endDate"
+                        type="date"
+                        value={endDate ? new Date(endDate).toISOString().split('T')[0] : ''}
+                        onChange={(e) => setEndDate(new Date(e.target.value))}
+                        className="w-full border-gray-300 rounded-md shadow-sm p-2 text-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 transition-colors"
+                      />
+                    </div>
+                  </div>
+                )}
+              </label>
+            )}
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex justify-end gap-4 mt-8">
+        {/* Buttons */}
+        <div className="flex justify-end gap-3 pt-4 border-t">
           <button
             onClick={handleClosePrintOptions}
-            className="px-6 py-3 bg-gray-200 text-gray-800 font-bold rounded-xl shadow-md hover:bg-gray-300 transition duration-150 ease-in-out"
+            className="px-6 py-2 text-gray-600 bg-gray-100 rounded-lg font-medium hover:bg-gray-200 transition-colors"
           >
             Cancel
           </button>
           <button
-            onClick={executePrint}
-            className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-xl shadow-md hover:bg-indigo-700 transition duration-150 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
-            disabled={
-              (printOption === 'current' && !payslip) ||
-              (printOption === 'selected' && selectedEmployeesForPrint.length === 0) ||
-              (printOption === 'all' && employeesToDisplay.length === 0)
-            }
+            onClick={handlePrint}
+            disabled={isPrintButtonDisabled}
+            className={`px-6 py-2 text-white rounded-lg font-medium transition-colors ${
+              isPrintButtonDisabled ? 'bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700'
+            }`}
           >
             Print
           </button>

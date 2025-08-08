@@ -1,17 +1,36 @@
 // src/App.js
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, onAuthStateChanged, signOut, signInWithCustomToken } from 'firebase/auth';
-import { getFirestore, collection, doc, setDoc, addDoc, deleteDoc, onSnapshot, query, orderBy, Timestamp } from 'firebase/firestore';
+import {
+  getFirestore,
+  collection,
+  doc,
+  setDoc,
+  addDoc,
+  deleteDoc,
+  onSnapshot,
+  query,
+  orderBy,
+  Timestamp,
+  getDocs,
+  where
+} from 'firebase/firestore';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
 import LoginScreen from './LoginScreen';
 import TabbedInterface from './TabbedInterface';
-import PayslipModal from './PayslipModal';
+import PrintManager from './PrintManager';
+import { EmployeeProvider } from './EmployeeContext';
 
-import { getSssContribution, getPhilhealthContribution, getPagibigContribution, getCeapContribution } from './utils';
+import {
+  getSssContribution,
+  getPhilhealthContribution,
+  getPagibigContribution,
+  getCeapContribution
+} from './utils';
 import { firebaseConfig } from './firebase-config';
 
 // Initialize Firebase app
@@ -67,15 +86,14 @@ const App = () => {
   const [employees, setEmployees] = useState([]);
   const [payslipHistory, setPayslipHistory] = useState([]);
   const [currentEmployee, setCurrentEmployee] = useState(initialEmployeeState);
-  const [payslip, setPayslip] = useState(null);
   const [error, setError] = useState(null);
   const [payslipDetails, setPayslipDetails] = useState(initialPayslipDetails);
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
   const [payslipDeductions, setPayslipDeductions] = useState(initialPayslipDeductionsState);
 
-  // This state will hold the generated payslip for preview and printing.
-  const [generatedPayslip, setGeneratedPayslip] = useState(null);
+  // Ref to access PrintManager methods
+  const printManagerRef = useRef();
 
   // Sign in with custom token on app load if available
   useEffect(() => {
@@ -96,14 +114,9 @@ const App = () => {
   // Firebase auth state observer
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setUserId(user.uid);
-      } else {
-        setUserId(null);
-      }
+      setUserId(user ? user.uid : null);
       setIsAuthReady(true);
     });
-
     return () => unsubscribe();
   }, [auth]);
 
@@ -119,28 +132,39 @@ const App = () => {
     const payslipCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/payslips`);
 
     const unsubscribeEmployees = onSnapshot(employeeCollectionRef, (snapshot) => {
-      const employeesData = snapshot.docs.map(doc => ({
+      setEmployees(snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
         otherDeductions: doc.data().otherDeductions || []
-      }));
-      setEmployees(employeesData);
+      })));
     });
 
-    const unsubscribePayslips = onSnapshot(query(payslipCollectionRef, orderBy('generatedAt', 'desc')), (snapshot) => {
-      const payslipsData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setPayslipHistory(payslipsData);
-    });
+    const unsubscribePayslips = onSnapshot(
+      query(payslipCollectionRef, orderBy('generatedAt', 'desc')),
+      (snapshot) => {
+        const normalizedStart = new Date(startDate);
+        normalizedStart.setHours(0, 0, 0, 0);
+
+        const normalizedEnd = new Date(endDate);
+        normalizedEnd.setHours(23, 59, 59, 999);
+
+        const filtered = snapshot.docs
+          .map(doc => ({ id: doc.id, ...doc.data() }))
+          .filter(p => {
+            if (!p.startDate) return false;
+            const payslipDate = new Date(`${p.startDate}T00:00:00`);
+            return payslipDate >= normalizedStart && payslipDate <= normalizedEnd;
+          });
+
+        setPayslipHistory(filtered);
+      }
+    );
 
     return () => {
       unsubscribeEmployees();
       unsubscribePayslips();
     };
-  }, [userId]);
-
+  }, [userId, startDate, endDate]);
 
   const handleSaveEmployee = async () => {
     setError(null);
@@ -187,19 +211,12 @@ const App = () => {
   const resetForm = () => {
     setCurrentEmployee(initialEmployeeState);
     setPayslipDeductions(initialPayslipDeductionsState);
-    setPayslip(null);
-    setGeneratedPayslip(null);
     setError(null);
   };
 
   const handleSelectEmployee = (id) => {
     const employee = employees.find(emp => emp.id === id) || initialEmployeeState;
     setCurrentEmployee(employee);
-    
-    const mostRecentPayslip = payslipHistory.find(p => p.employeeDocId === employee.id);
-
-    setGeneratedPayslip(mostRecentPayslip || null);
-    setPayslip(null);
     setPayslipDeductions(initialPayslipDeductionsState);
     setError(null);
   };
@@ -217,7 +234,7 @@ const App = () => {
 
   const handleGeneratePayslip = useCallback(async () => {
     setError(null);
-    if (!currentEmployee || !currentEmployee.id) {
+    if (!currentEmployee || !currentEmployee.name || !currentEmployee.id) {
       setError("Please select or save an employee first.");
       return;
     }
@@ -245,6 +262,19 @@ const App = () => {
       return isNaN(date.getTime()) ? null : date.toISOString().split('T')[0];
     };
 
+    const payslipCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/payslips`);
+    // Delete existing payslip for same employee and date range
+    const q = query(
+      payslipCollectionRef,
+      where("employeeDocId", "==", currentEmployee.id),
+      where("startDate", "==", toFormattedDateString(startDate)),
+      where("endDate", "==", toFormattedDateString(endDate))
+    );
+    const existing = await getDocs(q);
+    for (let docSnap of existing.docs) {
+      await deleteDoc(docSnap.ref);
+    }
+
     const newPayslip = {
       employeeDocId: currentEmployee.id,
       ...employeeDataWithoutId,
@@ -270,20 +300,27 @@ const App = () => {
     };
 
     try {
-      await addDoc(collection(db, `artifacts/${appId}/users/${userId}/payslips`), newPayslip);
-      setGeneratedPayslip(newPayslip);
+      await addDoc(payslipCollectionRef, newPayslip);
+      // Return the new payslip object
+      return newPayslip;
     } catch (e) {
       console.error("Error generating payslip:", e);
       setError("Failed to generate and save payslip.");
+      return null;
     }
   }, [currentEmployee, payslipDetails, userId, payslipDeductions, startDate, endDate]);
-
 
   const handleSignOut = async () => {
     try {
       await signOut(auth);
     } catch (e) {
       console.error("Error signing out:", e);
+    }
+  };
+
+  const handlePrintAllPayslips = () => {
+    if (printManagerRef.current) {
+      printManagerRef.current.printAllPayslips(payslipHistory);
     }
   };
 
@@ -298,39 +335,45 @@ const App = () => {
   return (
     <div className="App">
       {userId ? (
-        <>
-          <div className="flex justify-center my-4 z-20 relative">
+        <EmployeeProvider>
+          <div className="flex justify-center my-4 z-20 relative space-x-8">
             <div className="flex items-center space-x-4">
               <div className="flex flex-col">
                 <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">Start Date</label>
                 <DatePicker
-                    selected={startDate}
-                    onChange={(date) => setStartDate(date)}
-                    dateFormat="MMMM d, yyyy"
-                    className="border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 mt-1"
-                    id="startDate"
+                  selected={startDate}
+                  onChange={(date) => setStartDate(date)}
+                  dateFormat="MMMM d, yyyy"
+                  className="border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 mt-1"
+                  id="startDate"
                 />
               </div>
               <div className="flex flex-col">
                 <label htmlFor="endDate" className="block text-sm font-medium text-gray-700">End Date</label>
                 <DatePicker
-                    selected={endDate}
-                    onChange={(date) => setEndDate(date)}
-                    dateFormat="MMMM d, yyyy"
-                    className="border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 mt-1"
-                    id="endDate"
+                  selected={endDate}
+                  onChange={(date) => setEndDate(date)}
+                  dateFormat="MMMM d, yyyy"
+                  className="border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 mt-1"
+                  id="endDate"
                 />
               </div>
             </div>
+            <button
+              onClick={handlePrintAllPayslips}
+              className="self-end px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400"
+              type="button"
+              aria-label="Print All Payslips"
+            >
+              Print All Payslips
+            </button>
           </div>
+
           <TabbedInterface
             employees={employees}
             payslipHistory={payslipHistory}
             currentEmployee={currentEmployee}
             setCurrentEmployee={setCurrentEmployee}
-            payslip={generatedPayslip} // Pass generated payslip for preview
-            setPayslip={setPayslip} // This is for the modal
-            setGeneratedPayslip={setGeneratedPayslip}
             error={error}
             setError={setError}
             payslipDetails={payslipDetails}
@@ -351,16 +394,19 @@ const App = () => {
             startDate={startDate}
             endDate={endDate}
           />
-          <PayslipModal
-            payslip={payslip} // This is the modal's specific payslip
-            onClose={() => setPayslip(null)}
+          
+          <PrintManager
+            ref={printManagerRef}
+            payslip={null}
             employees={employees}
             payslipDetails={payslipDetails}
             setPayslipDetails={setPayslipDetails}
-            startDate={startDate} 
-            endDate={endDate}     
+            payslipHistory={payslipHistory}
+            startDate={startDate}
+            endDate={endDate}
+			hideButton={true}
           />
-        </>
+        </EmployeeProvider>
       ) : (
         <LoginScreen />
       )}

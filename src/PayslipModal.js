@@ -1,10 +1,13 @@
 // src/PayslipModal.js
-import React from 'react';
+import React, { useContext } from 'react';
 import PayslipDisplay from './PayslipDisplay';
 import PrintManager from './PrintManager';
+import { EmployeeContext } from './EmployeeContext'; // New import
 
-const PayslipModal = ({ payslip, onClose, employees, payslipDetails, setPayslipDetails, startDate, endDate }) => {
-  if (!payslip) {
+const PayslipModal = ({ onClose, employees, payslipDetails, setPayslipDetails, startDate, endDate }) => {
+  const { generatedPayslip } = useContext(EmployeeContext); // Use context to get payslip data
+
+  if (!generatedPayslip) {
     return null;
   }
 
@@ -31,10 +34,10 @@ const PayslipModal = ({ payslip, onClose, employees, payslipDetails, setPayslipD
             <div className="sm:flex sm:items-start">
               <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
                 <h3 className="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                  Payslip for {payslip.name}
+                  Payslip for {generatedPayslip.name}
                 </h3>
                 <div className="mt-2">
-                  <PayslipDisplay payslipData={payslip} />
+                  <PayslipDisplay payslipData={generatedPayslip} />
                 </div>
               </div>
             </div>
@@ -49,12 +52,13 @@ const PayslipModal = ({ payslip, onClose, employees, payslipDetails, setPayslipD
             </button>
             <div className="sm:mt-0 mt-3 w-full sm:w-auto sm:ml-3">
               <PrintManager
-                payslip={payslip}
+                payslip={generatedPayslip}
                 employees={employees}
                 payslipDetails={payslipDetails}
                 setPayslipDetails={setPayslipDetails}
                 startDate={startDate}
                 endDate={endDate}
+                isPayslipPreview={true}
               />
             </div>
           </div>

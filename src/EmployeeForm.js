@@ -1,6 +1,7 @@
 // src/EmployeeForm.js
 import React, { useState, useEffect } from 'react';
 import ConfirmationModal from './ConfirmationModal';
+import { FaTrashAlt, FaSave, FaPlus, FaTimes, FaUserPlus, FaFileInvoiceDollar, FaCheckCircle, FaUndo } from 'react-icons/fa';
 
 const EmployeeForm = ({
   employee,
@@ -86,223 +87,235 @@ const EmployeeForm = ({
       setEmployeeToDelete(null);
     }
   };
+
+  const inputClass = "w-full p-4 border border-gray-300 rounded-xl shadow-inner focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300";
+  const labelClass = "block text-sm font-semibold text-gray-700 mb-2";
   
   return (
-    <div className="bg-gray-50 p-6 rounded-xl shadow-inner border border-gray-200">
-      {/* Select Employee Dropdown and New Employee Button */}
-      <div className="mb-6 flex items-center gap-3"> {/* Increased gap for better spacing */}
-        <label htmlFor="employeeSelect" className="block text-sm font-medium text-gray-700 whitespace-nowrap">Select Employee:</label>
-        <div className="relative flex-grow">
-          <select
-            id="employeeSelect"
-            onChange={(e) => handleSelectEmployee(e.target.value)}
-            value={isEditing ? employee.id : ''}
-            className="block w-full pl-4 pr-10 py-2 text-base border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm appearance-none bg-white"
+    <div className="bg-white p-8 rounded-2xl shadow-neumorphic-light border border-gray-200 w-full">
+      {/* Header and Employee Selector */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 pb-6 border-b border-gray-200">
+        <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight mb-4 md:mb-0">
+          {isEditing ? `Editing: ${employee.name || 'Employee'}` : 'New Employee Profile'}
+        </h2>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+          <label htmlFor="employeeSelect" className="block text-base font-semibold text-gray-700 self-center whitespace-nowrap">Select Employee:</label>
+          <div className="relative flex-grow sm:flex-grow-0">
+            <select
+              id="employeeSelect"
+              onChange={(e) => handleSelectEmployee(e.target.value)}
+              value={isEditing ? employee.id : ''}
+              className="block w-full min-w-[250px] pl-5 pr-12 py-3 text-lg border-none rounded-2xl shadow-neumorphic-inset-light focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300 appearance-none bg-gray-50 text-gray-800"
+            >
+              <option value="">-- Select an Employee --</option>
+              {(employees || []).map((emp) => (
+                <option key={emp.id} value={emp.id}>{emp.name}</option>
+              ))}
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-600">
+              <svg className="fill-current h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+            </div>
+          </div>
+          <button
+            onClick={resetForm}
+            className="flex-shrink-0 px-6 py-3 bg-blue-600 text-white font-bold rounded-2xl shadow-neumorphic-light hover:shadow-neumorphic-hover transition-all duration-300 transform hover:scale-105 flex items-center gap-3"
+            title="Create a new employee profile"
           >
-            <option value="">-- Select an Employee --</option>
-            {(employees || []).map((emp) => (
-              <option key={emp.id} value={emp.id}>{emp.name}</option>
-            ))}
-          </select>
-          {/* Custom arrow for select dropdown */}
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-            <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+            <FaUserPlus className="h-5 w-5" />
+            <span>New</span>
+          </button>
+        </div>
+
+      {/* Employee Details Section */}
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label htmlFor="name" className={labelClass}>Employee Name</label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              value={employee.name}
+              onChange={handleInputChange}
+              placeholder="JUAN DELA CRUZ"
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label htmlFor="employeeId" className={labelClass}>Employee ID (Optional)</label>
+            <input
+              type="text"
+              id="employeeId"
+              name="employeeId"
+              value={employee.employeeId}
+              onChange={handleInputChange}
+              placeholder="E.g., EMP-12345"
+              className={inputClass}
+            />
           </div>
         </div>
-        <button
-          onClick={resetForm} // Call resetForm to clear fields for a new employee
-          className="px-5 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition-transform transform hover:scale-105 whitespace-nowrap"
-        >
-          New
-        </button>
-      </div>
-
-      <h3 className="text-lg font-semibold text-gray-700 mb-4">
-        {isEditing ? `Editing: ${employee.name}` : 'Create New Employee'}
-      </h3>
-      
-      <div className="space-y-4">
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700">Employee Name</label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            value={employee.name}
-            onChange={handleInputChange}
-            placeholder="JUAN DELA CRUZ"
-            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-          />
-        </div>
-        <div>
-          <label htmlFor="employeeId" className="block text-sm font-medium text-gray-700">Employee ID (Optional)</label>
-          <input
-            type="text"
-            id="employeeId"
-            name="employeeId"
-            value={employee.employeeId}
-            onChange={handleInputChange}
-            placeholder="EMP-12345 (Optional)"
-            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-          />
-        </div>
-        <div>
-          <label htmlFor="basicSalary" className="block text-sm font-medium text-gray-700">Basic Salary</label>
-          <input
-            type="number"
-            id="basicSalary"
-            name="basicSalary"
-            value={employee.basicSalary}
-            onChange={handleInputChange}
-            placeholder="0.00"
-            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-          />
-        </div>
-        <div>
-          <label htmlFor="costOfLivingAllowance" className="block text-sm font-medium text-gray-700">Cost of Living Allowance</label>
-          <input
-            type="number"
-            id="costOfLivingAllowance"
-            name="costOfLivingAllowance"
-            value={employee.costOfLivingAllowance}
-            onChange={handleInputChange}
-            placeholder="0.00"
-            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-          />
-        </div>
-        <div>
-          <h4 className="text-md font-medium text-gray-700">Statutory Contributions (Auto-computed)</h4>
-          <div className="grid grid-cols-2 gap-4 mt-2">
-            <div>
-              <label htmlFor="sssContribution" className="block text-xs font-medium text-gray-500">SSS Contribution</label>
-              <input
-                type="number"
-                id="sssContribution"
-                name="sssContribution"
-                value={employee.sssContribution}
-                onChange={handleInputChange}
-                placeholder="0.00"
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              />
-            </div>
-            <div>
-              <label htmlFor="philhealthContribution" className="block text-xs font-medium text-gray-500">Philhealth Contribution</label>
-              <input
-                type="number"
-                id="philhealthContribution"
-                name="philhealthContribution"
-                value={employee.philhealthContribution}
-                onChange={handleInputChange}
-                placeholder="0.00"
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              />
-            </div>
-            <div>
-              <label htmlFor="pagibigContribution" className="block text-xs font-medium text-gray-500">Pag-IBIG Contribution</label>
-              <input
-                type="number"
-                id="pagibigContribution"
-                name="pagibigContribution"
-                value={employee.pagibigContribution}
-                onChange={handleInputChange}
-                placeholder="0.00"
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              />
-            </div>
-            <div>
-              <label htmlFor="ceapContribution" className="block text-xs font-medium text-gray-500">CEAP Contribution</label>
-              <input
-                type="number"
-                id="ceapContribution"
-                name="ceapContribution"
-                value={employee.ceapContribution}
-                onChange={handleInputChange}
-                placeholder="0.00"
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              />
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label htmlFor="basicSalary" className={labelClass}>Basic Salary</label>
+            <input
+              type="number"
+              id="basicSalary"
+              name="basicSalary"
+              value={employee.basicSalary}
+              onChange={handleInputChange}
+              placeholder="0.00"
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label htmlFor="costOfLivingAllowance" className={labelClass}>Cost of Living Allowance</label>
+            <input
+              type="number"
+              id="costOfLivingAllowance"
+              name="costOfLivingAllowance"
+              value={employee.costOfLivingAllowance}
+              onChange={handleInputChange}
+              placeholder="0.00"
+              className={inputClass}
+            />
           </div>
         </div>
       </div>
 
-      <div className="mt-6 border-t pt-4">
-        <h4 className="text-md font-medium text-gray-700 mb-2">Payslip Generation Deductions</h4>
-        <p className="text-sm text-gray-500 mb-4">These fields are for the current payslip only and will not be saved to the employee's profile.</p>
-        <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="sssLoan" className="block text-xs font-medium text-gray-500">SSS Loan</label>
-              <input
-                type="number"
-                id="sssLoan"
-                name="sssLoan"
-                value={payslipDeductions?.sssLoan ?? ''}
-                onChange={handlePayslipDeductionChange}
-                placeholder="0.00"
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              />
-            </div>
-            <div>
-              <label htmlFor="pagibigLoanSTL" className="block text-xs font-medium text-gray-500">Pag-IBIG Loan-STL</label>
-              <input
-                type="number"
-                id="pagibigLoanSTL"
-                name="pagibigLoanSTL"
-                value={payslipDeductions?.pagibigLoanSTL ?? ''}
-                onChange={handlePayslipDeductionChange}
-                placeholder="0.00"
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              />
-            </div>
-            <div>
-              <label htmlFor="pagibigLoanCL" className="block text-xs font-medium text-gray-500">Pag-IBIG Loan-CL</label>
-              <input
-                type="number"
-                id="pagibigLoanCL"
-                name="pagibigLoanCL"
-                value={payslipDeductions?.pagibigLoanCL ?? ''}
-                onChange={handlePayslipDeductionChange}
-                placeholder="0.00"
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              />
-            </div>
-            <div>
-              <label htmlFor="personalLoan" className="block text-xs font-medium text-gray-500">Personal Loan</label>
-              <input
-                type="number"
-                id="personalLoan"
-                name="personalLoan"
-                value={payslipDeductions?.personalLoan ?? ''}
-                onChange={handlePayslipDeductionChange}
-                placeholder="0.00"
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              />
-            </div>
-            <div>
-              <label htmlFor="cashAdvance" className="block text-xs font-medium text-gray-500">Cash Advance</label>
-              <input
-                type="number"
-                id="cashAdvance"
-                name="cashAdvance"
-                value={payslipDeductions?.cashAdvance ?? ''}
-                onChange={handlePayslipDeductionChange}
-                placeholder="0.00"
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              />
-            </div>
-            <div>
-              <label htmlFor="canteen" className="block text-xs font-medium text-gray-500">Canteen</label>
-              <input
-                type="number"
-                id="canteen"
-                name="canteen"
-                value={payslipDeductions?.canteen ?? ''}
-                onChange={handlePayslipDeductionChange}
-                placeholder="0.00"
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              />
-            </div>
-            <div className="col-span-2">
-            <label htmlFor="tithings" className="block text-sm font-medium text-gray-700">Tithings</label>
+      {/* Statutory Contributions Section */}
+      <div className="mt-8 pt-6 border-t border-gray-200">
+        <h4 className="text-2xl font-bold text-gray-800 mb-6">Statutory Contributions (Auto-computed)</h4>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="bg-gray-50 p-4 rounded-2xl shadow-neumorphic-light">
+            <label htmlFor="sssContribution" className="block text-sm font-semibold text-gray-500 mb-1">SSS Contribution</label>
+            <input
+              type="number"
+              id="sssContribution"
+              name="sssContribution"
+              value={employee.sssContribution}
+              readOnly
+              placeholder="0.00"
+              className="mt-2 block w-full text-center bg-gray-100 border-none rounded-xl text-lg font-bold py-2 px-3 text-gray-700 shadow-neumorphic-inset-light"
+            />
+          </div>
+          <div className="bg-gray-50 p-4 rounded-2xl shadow-neumorphic-light">
+            <label htmlFor="philhealthContribution" className="block text-sm font-semibold text-gray-500 mb-1">Philhealth</label>
+            <input
+              type="number"
+              id="philhealthContribution"
+              name="philhealthContribution"
+              value={employee.philhealthContribution}
+              readOnly
+              placeholder="0.00"
+              className="mt-2 block w-full text-center bg-gray-100 border-none rounded-xl text-lg font-bold py-2 px-3 text-gray-700 shadow-neumorphic-inset-light"
+            />
+          </div>
+          <div className="bg-gray-50 p-4 rounded-2xl shadow-neumorphic-light">
+            <label htmlFor="pagibigContribution" className="block text-sm font-semibold text-gray-500 mb-1">Pag-IBIG</label>
+            <input
+              type="number"
+              id="pagibigContribution"
+              name="pagibigContribution"
+              value={employee.pagibigContribution}
+              readOnly
+              placeholder="0.00"
+              className="mt-2 block w-full text-center bg-gray-100 border-none rounded-xl text-lg font-bold py-2 px-3 text-gray-700 shadow-neumorphic-inset-light"
+            />
+          </div>
+          <div className="bg-gray-50 p-4 rounded-2xl shadow-neumorphic-light flex flex-col justify-center">
+            <label htmlFor="ceapContribution" className="block text-sm font-semibold text-gray-500 mb-1 text-center">CEAP</label>
+            <input
+              type="number"
+              id="ceapContribution"
+              name="ceapContribution"
+              value={employee.ceapContribution}
+              readOnly
+              placeholder="0.00"
+              className="mt-2 block w-full text-center bg-gray-100 border-none rounded-xl text-lg font-bold py-2 px-3 text-gray-700 shadow-neumorphic-inset-light"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Payslip Deductions Section */}
+      <div className="mt-8 pt-6 border-t border-gray-200">
+        <h4 className="text-2xl font-bold text-gray-800 mb-4">Payslip Deductions</h4>
+        <p className="text-sm text-gray-500 mb-6">These fields are for the current payslip only and will not be saved to the employee's profile.</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          <div>
+            <label htmlFor="sssLoan" className={labelClass}>SSS Loan</label>
+            <input
+              type="number"
+              id="sssLoan"
+              name="sssLoan"
+              value={payslipDeductions?.sssLoan ?? ''}
+              onChange={handlePayslipDeductionChange}
+              placeholder="0.00"
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label htmlFor="pagibigLoanSTL" className={labelClass}>Pag-IBIG Loan-STL</label>
+            <input
+              type="number"
+              id="pagibigLoanSTL"
+              name="pagibigLoanSTL"
+              value={payslipDeductions?.pagibigLoanSTL ?? ''}
+              onChange={handlePayslipDeductionChange}
+              placeholder="0.00"
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label htmlFor="pagibigLoanCL" className={labelClass}>Pag-IBIG Loan-CL</label>
+            <input
+              type="number"
+              id="pagibigLoanCL"
+              name="pagibigLoanCL"
+              value={payslipDeductions?.pagibigLoanCL ?? ''}
+              onChange={handlePayslipDeductionChange}
+              placeholder="0.00"
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label htmlFor="personalLoan" className={labelClass}>Personal Loan</label>
+            <input
+              type="number"
+              id="personalLoan"
+              name="personalLoan"
+              value={payslipDeductions?.personalLoan ?? ''}
+              onChange={handlePayslipDeductionChange}
+              placeholder="0.00"
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label htmlFor="cashAdvance" className={labelClass}>Cash Advance</label>
+            <input
+              type="number"
+              id="cashAdvance"
+              name="cashAdvance"
+              value={payslipDeductions?.cashAdvance ?? ''}
+              onChange={handlePayslipDeductionChange}
+              placeholder="0.00"
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label htmlFor="canteen" className={labelClass}>Canteen</label>
+            <input
+              type="number"
+              id="canteen"
+              name="canteen"
+              value={payslipDeductions?.canteen ?? ''}
+              onChange={handlePayslipDeductionChange}
+              placeholder="0.00"
+              className={inputClass}
+            />
+          </div>
+          <div className="sm:col-span-2 md:col-span-1">
+            <label htmlFor="tithings" className={labelClass}>Tithings</label>
             <input
               type="number"
               id="tithings"
@@ -310,79 +323,87 @@ const EmployeeForm = ({
               value={payslipDeductions?.tithings ?? ''}
               onChange={handlePayslipDeductionChange}
               placeholder="0.00"
-              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+              className={inputClass}
             />
           </div>
         </div>
         
-        <div>
-          <h4 className="text-md font-medium text-gray-700 mt-4">Other Deductions (Custom)</h4>
-          {payslipDeductions?.otherDeductions?.map((deduction, index) => (
-            <div key={index} className="flex gap-2 mt-2">
-              <input
-                type="text"
-                name="name"
-                value={deduction.name}
-                onChange={(e) => handleOtherDeductionChange(index, e)}
-                placeholder="Deduction Name"
-                className="flex-1 border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              />
-              <input
-                type="number"
-                name="amount"
-                value={deduction.amount}
-                onChange={(e) => handleOtherDeductionChange(index, e)}
-                placeholder="Amount"
-                className="w-24 border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              />
-              <button
-                type="button"
-                onClick={() => handleRemoveOtherDeduction(index)}
-                className="text-red-500 hover:text-red-700"
-              >
-                &times;
-              </button>
-            </div>
-          ))}
+        {/* Other Deductions Section */}
+        <div className="mt-8">
+          <h4 className="text-2xl font-bold text-gray-800 mb-6">Other Deductions (Custom)</h4>
+          <div className="space-y-4">
+            {payslipDeductions?.otherDeductions?.map((deduction, index) => (
+              <div key={index} className="flex flex-col sm:flex-row gap-4 items-center">
+                <input
+                  type="text"
+                  name="name"
+                  value={deduction.name}
+                  onChange={(e) => handleOtherDeductionChange(index, e)}
+                  placeholder="Deduction Name"
+                  className="flex-1 w-full border-none rounded-2xl shadow-neumorphic-inset-light py-3 px-5 text-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300 bg-gray-50 text-gray-800"
+                />
+                <input
+                  type="number"
+                  name="amount"
+                  value={deduction.amount}
+                  onChange={(e) => handleOtherDeductionChange(index, e)}
+                  placeholder="Amount"
+                  className="w-full sm:w-40 border-none rounded-2xl shadow-neumorphic-inset-light py-3 px-5 text-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300 bg-gray-50 text-gray-800"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleRemoveOtherDeduction(index)}
+                  className="flex-shrink-0 text-red-500 hover:text-red-700 transition-colors self-center p-3 rounded-full hover:bg-red-50"
+                  title="Remove this deduction"
+                >
+                  <FaTimes className="h-6 w-6" />
+                </button>
+              </div>
+            ))}
+          </div>
           <button
             type="button"
             onClick={handleAddOtherDeduction}
-            className="mt-2 text-indigo-600 hover:text-indigo-900 text-sm font-medium"
+            className="mt-6 flex items-center gap-3 text-indigo-600 hover:text-indigo-800 text-base font-semibold transition-colors rounded-xl p-3 hover:bg-indigo-50"
           >
-            + Add another deduction
+            <FaPlus className="h-5 w-5" />
+            <span>Add another deduction</span>
           </button>
         </div>
       </div>
       
-      <div className="mt-6 flex justify-between">
-        <div>
-          <button
-            onClick={handleGeneratePayslip}
-            className="px-6 py-3 bg-indigo-600 text-white font-bold rounded-full shadow-lg hover:bg-indigo-700 transition-transform transform hover:scale-105"
-          >
-            Generate Payslip
-          </button>
-        </div>
-        <div className="flex gap-2">
+      {/* Action Buttons Section */}
+      <div className="mt-8 pt-6 border-t border-gray-200 flex flex-col md:flex-row justify-between items-center gap-6">
+        <button
+          onClick={handleGeneratePayslip}
+          className="w-full md:w-auto px-8 py-3 bg-indigo-600 text-white font-bold rounded-full shadow-neumorphic-indigo hover:shadow-neumorphic-hover-indigo transition-all duration-300 ease-in-out transform hover:scale-105 flex items-center justify-center gap-3 text-lg"
+        >
+          <FaFileInvoiceDollar className="h-5 w-5" />
+          <span>Generate Payslip</span>
+        </button>
+        <div className="flex flex-wrap justify-center gap-4">
           {isEditing && (
             <button
-              onClick={() => handleDeleteClick(employee.id)} // This now correctly calls handleDeleteClick
-              className="px-4 py-2 bg-red-500 text-white rounded-lg shadow-md hover:bg-red-600 transition duration-300"
+              onClick={() => handleDeleteClick(employee.id)}
+              className="px-6 py-3 bg-red-500 text-white rounded-full shadow-neumorphic-red hover:shadow-neumorphic-hover-red transition-all duration-300 transform hover:scale-105 flex items-center gap-3"
             >
-              Delete
+              <FaTrashAlt className="h-5 w-5" />
+              <span>Delete</span>
             </button>
           )}
           <button
             onClick={handleSaveEmployee}
-            className="px-4 py-2 bg-green-500 text-white rounded-lg shadow-md hover:bg-green-600 transition duration-300"
+            className="px-6 py-3 bg-green-500 text-white rounded-full shadow-neumorphic-green hover:shadow-neumorphic-hover-green transition-all duration-300 transform hover:scale-105 flex items-center gap-3"
           >
-            {isEditing ? 'Update' : 'Save'}
+            <FaSave className="h-5 w-5" />
+            <span>{isEditing ? 'Update' : 'Save'}</span>
           </button>
           <button
             onClick={resetForm}
-            className="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg shadow-md hover:bg-gray-400 transition duration-300"
+            className="px-6 py-3 bg-gray-300 text-gray-800 rounded-full shadow-neumorphic-light hover:shadow-neumorphic-hover transition-all duration-300 transform hover:scale-105 flex items-center gap-3"
           >
-            Clear
+            <FaUndo className="h-5 w-5" />
+            <span>Clear</span>
           </button>
         </div>
       </div>
