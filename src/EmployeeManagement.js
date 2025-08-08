@@ -21,7 +21,7 @@ const EmployeeManagement = ({
   getPagibigContribution,
   getCeapContribution,
 }) => {
-  const { setGeneratedPayslip } = useContext(EmployeeContext);
+  const { setGeneratedPayslips } = useContext(EmployeeContext);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -66,7 +66,7 @@ const EmployeeManagement = ({
   const handleGeneratePayslipClick = async () => {
     const newPayslip = await handleGeneratePayslip();
     if (newPayslip) {
-      setGeneratedPayslip(newPayslip);
+      setGeneratedPayslips(currentEmployee.id, newPayslip);
     }
   };
 
@@ -369,7 +369,7 @@ const EmployeeManagement = ({
               className="px-8 py-3 bg-green-600 text-white font-bold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-3 text-lg"
             >
               <FaSave className="h-5 w-5" />
-              <span>{isEditing ? 'Update Employee' : 'Save Employee'}</span>
+              <span>{isEditing ? 'Update Profile' : 'Save Employee'}</span>
             </button>
             {isEditing && (
               <button

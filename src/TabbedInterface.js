@@ -1,10 +1,10 @@
-// src/TabbedInterface.js
 import React, { useState, useContext } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUsers, faHistory } from '@fortawesome/free-solid-svg-icons';
 import EmployeeManagement from './EmployeeManagement';
 import PayslipHistory from './PayslipHistory';
 import PayslipDisplay from './PayslipDisplay';
+import PayslipModal from './PayslipModal';
 import { EmployeeContext } from './EmployeeContext';
 
 const TabbedInterface = ({
@@ -32,7 +32,9 @@ const TabbedInterface = ({
   endDate,
 }) => {
   const [activeTab, setActiveTab] = useState('employeeManagement');
-  const { generatedPayslip } = useContext(EmployeeContext);
+  const { generatedPayslips, showPayslipModal, setShowPayslipModal, selectedPayslipData } = useContext(EmployeeContext);
+  
+  const currentPayslip = generatedPayslips[currentEmployee?.id];
 
   const tabs = [
     { id: 'employeeManagement', label: 'Employee Management', icon: faUsers },
@@ -41,6 +43,11 @@ const TabbedInterface = ({
 
   const handleTabClick = (tabId) => {
     setActiveTab(tabId);
+    setShowPayslipModal(false); // Close the modal when changing tabs
+  };
+
+  const handleCloseModal = () => {
+    setShowPayslipModal(false);
   };
 
   const layoutClass =
@@ -121,8 +128,8 @@ const TabbedInterface = ({
             Payslip Preview
           </h2>
           <div className="w-full max-w-lg bg-white p-6 rounded-2xl shadow-lg relative border border-gray-200">
-            {generatedPayslip ? (
-              <PayslipDisplay payslipData={generatedPayslip} />
+            {currentPayslip ? (
+              <PayslipDisplay payslipData={currentPayslip} />
             ) : (
               <div className="text-center py-16 text-gray-400">
                 <p className="text-lg font-semibold mb-2">No payslip preview available.</p>
@@ -133,6 +140,13 @@ const TabbedInterface = ({
             )}
           </div>
         </div>
+      )}
+
+      {showPayslipModal && (
+        <PayslipModal
+          payslipData={selectedPayslipData}
+          onClose={handleCloseModal}
+        />
       )}
     </div>
   );

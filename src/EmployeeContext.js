@@ -1,45 +1,52 @@
-// src/EmployeeContext.js
-
 import React, { createContext, useState, useEffect } from 'react';
 
-// Create the context
 export const EmployeeContext = createContext();
 
-// Create the provider component
 export const EmployeeProvider = ({ children }) => {
-  // Initialize state by reading from sessionStorage, or default to null
-  const [generatedPayslip, setGeneratedPayslip] = useState(() => {
+  // Use a function to initialize state from localStorage
+  const [generatedPayslips, setGeneratedPayslipsState] = useState(() => {
     try {
-      const item = window.sessionStorage.getItem('generatedPayslip');
-      return item ? JSON.parse(item) : null;
+      const storedPayslips = localStorage.getItem('generatedPayslips');
+      return storedPayslips ? JSON.parse(storedPayslips) : {};
     } catch (error) {
-      console.error("Error reading from sessionStorage:", error);
-      return null;
+      console.error("Failed to load payslips from localStorage:", error);
+      return {};
     }
   });
 
-  // Use an effect to save the state to sessionStorage whenever it changes
+  const [currentEmployee, setCurrentEmployee] = useState(null);
+  const [showPayslipModal, setShowPayslipModal] = useState(false);
+  const [selectedPayslipData, setSelectedPayslipData] = useState(null);
+
+  // useEffect to save payslips to localStorage whenever they change
   useEffect(() => {
     try {
-      if (generatedPayslip) {
-        window.sessionStorage.setItem('generatedPayslip', JSON.stringify(generatedPayslip));
-      } else {
-        // Clear storage if the payslip is cleared
-        window.sessionStorage.removeItem('generatedPayslip');
-      }
+      localStorage.setItem('generatedPayslips', JSON.stringify(generatedPayslips));
     } catch (error) {
-      console.error("Error writing to sessionStorage:", error);
+      console.error("Failed to save payslips to localStorage:", error);
     }
-  }, [generatedPayslip]);
-  
-  // The value provided to any child components
-  const contextValue = {
-    generatedPayslip,
-    setGeneratedPayslip
+  }, [generatedPayslips]);
+
+  const setGeneratedPayslips = (employeeId, payslipData) => {
+    setGeneratedPayslipsState(prevPayslips => ({
+      ...prevPayslips,
+      [employeeId]: payslipData
+    }));
+  };
+
+  const value = {
+    generatedPayslips,
+    setGeneratedPayslips,
+    currentEmployee,
+    setCurrentEmployee,
+    showPayslipModal,
+    setShowPayslipModal,
+    selectedPayslipData,
+    setSelectedPayslipData
   };
 
   return (
-    <EmployeeContext.Provider value={contextValue}>
+    <EmployeeContext.Provider value={value}>
       {children}
     </EmployeeContext.Provider>
   );

@@ -1,19 +1,19 @@
-// src/PayslipHistory.js
 import React, { useContext } from 'react';
 import { EmployeeContext } from './EmployeeContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faTrash } from '@fortawesome/free-solid-svg-icons';
 
 const PayslipHistory = ({ payslipHistory, handleDeletePayslip, employees }) => {
-  // Get the function to update the preview from the context
-  const { setGeneratedPayslip } = useContext(EmployeeContext);
+  const { setSelectedPayslipData, setShowPayslipModal } = useContext(EmployeeContext);
 
-  // When a payslip is selected from the list, update the preview pane
   const handleSelectPayslip = (payslip) => {
     // Find the corresponding full employee record to ensure all data is available
     const employee = employees.find(emp => emp.id === payslip.employeeDocId);
-    const fullPayslipData = { ...employee, ...payslip };
-    setGeneratedPayslip(fullPayslipData); // This updates the preview
+    if (employee) {
+      const fullPayslipData = { ...employee, ...payslip };
+      setSelectedPayslipData(fullPayslipData);
+      setShowPayslipModal(true); // Open the modal
+    }
   };
 
   const formatDate = (dateInput) => {
