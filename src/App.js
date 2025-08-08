@@ -404,7 +404,7 @@ const App = () => {
             payslipHistory={payslipHistory}
             startDate={startDate}
             endDate={endDate}
-			hideButton={true}
+            hideButton={true}
           />
         </EmployeeProvider>
       ) : (

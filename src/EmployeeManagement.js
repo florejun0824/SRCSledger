@@ -1,7 +1,7 @@
 // src/EmployeeManagement.js
-import React, { useContext } from 'react';
-import { EmployeeContext } from './EmployeeContext';
+import React, { useState, useEffect, useContext } from 'react';
 import { FaTrashAlt, FaSave, FaPlus, FaTimes, FaUserPlus, FaFileInvoiceDollar } from 'react-icons/fa';
+import { EmployeeContext } from './EmployeeContext';
 
 const EmployeeManagement = ({
   employees,
@@ -21,7 +21,23 @@ const EmployeeManagement = ({
   getPagibigContribution,
   getCeapContribution,
 }) => {
-  const { setGeneratedPayslips } = useContext(EmployeeContext);
+  const { setSelectedPayslipData, setShowPayslipModal } = useContext(EmployeeContext);
+
+  const [isFormDirty, setIsFormDirty] = useState(false);
+
+  useEffect(() => {
+    // Check if any form fields have been changed from the initial state
+    const hasChanges = Object.keys(currentEmployee).some(key => {
+      // Exclude ID from comparison
+      if (key === 'id') return false;
+      const initialValue = currentEmployee[key];
+      const currentValue = employees.find(emp => emp.id === currentEmployee.id)?.[key];
+      // Compare stringified values to handle numbers and arrays
+      return JSON.stringify(initialValue) !== JSON.stringify(currentValue);
+    });
+    setIsFormDirty(hasChanges);
+  }, [currentEmployee, employees]);
+
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -64,10 +80,11 @@ const EmployeeManagement = ({
 
   const statutoryContributions = calculateStatutoryContributions();
   const handleGeneratePayslipClick = async () => {
-    const newPayslip = await handleGeneratePayslip();
-    if (newPayslip) {
-      setGeneratedPayslips(currentEmployee.id, newPayslip);
+    if (!currentEmployee.id) {
+      alert("Please select or save an employee first.");
+      return;
     }
+    await handleGeneratePayslip();
   };
 
   const isEditing = !!currentEmployee.id;

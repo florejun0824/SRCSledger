@@ -32,9 +32,12 @@ const TabbedInterface = ({
   endDate,
 }) => {
   const [activeTab, setActiveTab] = useState('employeeManagement');
-  const { generatedPayslips, showPayslipModal, setShowPayslipModal, selectedPayslipData } = useContext(EmployeeContext);
+  const { showPayslipModal, setShowPayslipModal, selectedPayslipData } = useContext(EmployeeContext);
   
-  const currentPayslip = generatedPayslips[currentEmployee?.id];
+  // Find the most recent payslip for the current employee from the payslipHistory prop
+  const currentPayslip = payslipHistory.find(
+    (payslip) => payslip.employeeDocId === currentEmployee?.id
+  );
 
   const tabs = [
     { id: 'employeeManagement', label: 'Employee Management', icon: faUsers },
