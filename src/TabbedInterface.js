@@ -1,13 +1,21 @@
 // src/TabbedInterface.js
 
 import React, { useState, useContext } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUsers, faHistory, faReceipt, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
+// Updated imports to use the correct Hugeicons
+import {
+  UserGroupIcon,
+  Clock01Icon,
+  ChartColumnIcon,
+  AlertCircleIcon, // Corrected from WarningIcon
+  InvoiceIcon
+} from 'hugeicons-react';
+
 import EmployeeManagement from './EmployeeManagement';
 import PayslipHistory from './PayslipHistory';
 import PayslipDisplay from './PayslipDisplay';
 import PayslipModal from './PayslipModal';
 import { EmployeeContext } from './EmployeeContext';
+import MonthlyReport from './MonthlyReport'; // Import the new report component
 
 const TabbedInterface = ({
   employees,
@@ -42,8 +50,9 @@ const TabbedInterface = ({
   );
 
   const tabs = [
-    { id: 'employeeManagement', label: 'Employee Management', icon: faUsers },
-    { id: 'payslipHistory', label: 'Payslip History', icon: faHistory },
+    { id: 'employeeManagement', label: 'Employee Management', icon: UserGroupIcon, color: '#3182CE' },
+    { id: 'payslipHistory', label: 'Payslip History', icon: Clock01Icon, color: '#48BB78' },
+    { id: 'monthlyReport', label: 'Monthly Payroll', icon: ChartColumnIcon, color: '#805AD5' },
   ];
 
   const handleTabClick = (tabId) => {
@@ -55,7 +64,7 @@ const TabbedInterface = ({
     setShowPayslipModal(false);
   };
 
-  // Determine layout based on active tab
+  // Your smart layout logic is preserved. The sidebar will only show for the employeeManagement tab.
   const layoutHasSidebar = activeTab === 'employeeManagement';
 
   return (
@@ -65,7 +74,7 @@ const TabbedInterface = ({
         <div className={layoutHasSidebar ? 'lg:col-span-3' : 'col-span-1'}>
           <div className="bg-white rounded-2xl shadow-xl p-2 md:p-4">
             {/* Tab Navigation */}
-            <nav className="p-1.5 inline-flex items-center space-x-2 bg-slate-100 rounded-full shadow-inner mb-8">
+            <nav className="p-1.5 inline-flex flex-wrap items-center space-x-2 bg-slate-100 rounded-full shadow-inner mb-8">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
@@ -76,7 +85,7 @@ const TabbedInterface = ({
                       : 'text-slate-600 hover:bg-slate-200'
                   }`}
                 >
-                  <FontAwesomeIcon icon={tab.icon} className="mr-3 h-5 w-5" />
+                  <tab.icon className="mr-3 h-5 w-5" color={activeTab === tab.id ? 'white' : tab.color} />
                   {tab.label}
                 </button>
               ))}
@@ -88,7 +97,7 @@ const TabbedInterface = ({
                 className="bg-red-100 border-l-4 border-red-500 text-red-800 p-4 rounded-r-lg relative mb-6 shadow-md flex items-center"
                 role="alert"
               >
-                <FontAwesomeIcon icon={faExclamationTriangle} className="h-5 w-5 text-red-500 mr-3" />
+                <AlertCircleIcon className="h-5 w-5 text-red-500 mr-3" />
                 <div>
                   <strong className="font-bold">Error:</strong>
                   <span className="block sm:inline ml-2">{error}</span>
@@ -122,13 +131,16 @@ const TabbedInterface = ({
               )}
               {activeTab === 'payslipHistory' && (
                 <PayslipHistory
-                  {...{
-                    payslipHistory,
-                    employees,
-                    handleDeletePayslip,
-                    startDate,
-                    endDate,
-                  }}
+                  payslipHistory={payslipHistory}
+                  handleDeletePayslip={handleDeletePayslip}
+                  employees={employees}
+                />
+              )}
+              {activeTab === 'monthlyReport' && (
+                 <MonthlyReport
+                  payslipHistory={payslipHistory}
+                  startDate={startDate}
+                  endDate={endDate}
                 />
               )}
             </div>
@@ -140,7 +152,7 @@ const TabbedInterface = ({
           <div className="lg:col-span-2">
             <div className="bg-white rounded-2xl shadow-xl p-2 md:p-4 sticky top-32">
               <h2 className="text-2xl font-bold text-slate-800 mb-6 pb-4 border-b border-slate-200 flex items-center">
-                <FontAwesomeIcon icon={faReceipt} className="mr-3 text-blue-500" />
+                <InvoiceIcon className="mr-3 text-blue-500" />
                 Payslip Preview
               </h2>
               <div className="w-full bg-slate-50 p-4 rounded-xl shadow-inner border border-slate-200 min-h-[900px] flex items-center justify-center">
@@ -148,7 +160,7 @@ const TabbedInterface = ({
                   <PayslipDisplay payslipData={currentPayslip} />
                 ) : (
                   <div className="text-center py-16 text-slate-400">
-                     <FontAwesomeIcon icon={faReceipt} className="text-6xl text-slate-300 mb-4" />
+                     <InvoiceIcon className="text-6xl text-slate-300 mb-4" />
                     <p className="text-lg font-semibold mb-2">No payslip preview available.</p>
                     <p className="text-sm">
                       Select an employee and generate a payslip to see a preview here.

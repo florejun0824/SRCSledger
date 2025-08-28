@@ -21,9 +21,9 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import { FaPrint, FaCheckCircle } from 'react-icons/fa';
 
-import Header from './Header'; // Import the new Header component
+import Header from './Header'; 
 import LoginScreen from './LoginScreen';
-import TabbedInterface from './TabbedInterface';
+import TabbedInterface from './TabbedInterface'; // Ensure this is imported
 import PrintManager from './PrintManager';
 import { EmployeeProvider } from './EmployeeContext';
 
@@ -35,6 +35,7 @@ import {
 } from './utils';
 import { firebaseConfig } from './firebase-config';
 
+// ... (rest of the initial setup and constants remain the same)
 // Initialize Firebase app
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -81,6 +82,7 @@ const initialPayslipDeductionsState = {
   tithings: 100,
   otherDeductions: [],
 };
+
 
 const App = () => {
   const [userId, setUserId] = useState(null);
@@ -163,6 +165,7 @@ const App = () => {
           .map(doc => ({ id: doc.id, ...doc.data() }))
           .filter(p => {
             if (!p.startDate) return false;
+            // The date from Firestore is a string like '2025-08-28', so we create a Date object in UTC
             const payslipDate = new Date(`${p.startDate}T00:00:00`);
             return payslipDate >= normalizedStart && payslipDate <= normalizedEnd;
           });
@@ -257,8 +260,6 @@ const App = () => {
     const basic = parseFloat(currentEmployee.basicSalary) || 0;
     const costOfLivingAllowance = parseFloat(currentEmployee.costOfLivingAllowance) || 0;
 
-    // === FIX: Use statutory contributions directly from the employee object ===
-    // This ensures that any manually edited values are used in the calculation.
     const sssContribution = parseFloat(currentEmployee.sssContribution) || 0;
     const philhealthContribution = parseFloat(currentEmployee.philhealthContribution) || 0;
     const pagibigContribution = parseFloat(currentEmployee.pagibigContribution) || 0;
@@ -301,7 +302,6 @@ const App = () => {
       grossSalary: grossSalary.toFixed(2),
       totalDeductions: totalDeductions.toFixed(2),
       netSalary: netSalary.toFixed(2),
-      // === FIX: Use the correct variables for the new payslip object ===
       sssContribution: sssContribution.toFixed(2),
       philhealthContribution: philhealthContribution.toFixed(2),
       pagibigContribution: pagibigContribution.toFixed(2),
@@ -352,7 +352,6 @@ const App = () => {
 
   return (
     <div className="App bg-slate-50 min-h-screen">
-      {/* Toast Notification */}
       {toast.show && (
         <div
           className="fixed top-28 right-5 z-[100] flex items-center gap-3 bg-green-600 text-white py-3 px-5 rounded-lg shadow-2xl transition-transform duration-300 transform"
@@ -394,7 +393,7 @@ const App = () => {
                   </div>
                   <button
                     onClick={handlePrintAllPayslips}
-                    className="w-full md:w-auto flex items-center justify-center gap-3 px-6 py-3 bg-green-600 text-white font-bold rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-300 transform hover:scale-105"
+                    className="w-full md:w-auto flex items-center justify-center gap-3 px-6 py-3 bg-green-600 text-white font-bold rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-300 transform hover:scale-105 no-print"
                     type="button"
                     aria-label="Print All Payslips"
                   >
@@ -404,6 +403,7 @@ const App = () => {
               </div>
             </div>
 
+            {/* THIS IS THE ONLY MAJOR CHANGE IN THIS FILE */}
             <TabbedInterface
               employees={employees}
               payslipHistory={payslipHistory}
