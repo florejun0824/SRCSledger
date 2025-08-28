@@ -19,7 +19,9 @@ import {
 } from 'firebase/firestore';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import { FaPrint } from 'react-icons/fa';
 
+import Header from './Header'; // Import the new Header component
 import LoginScreen from './LoginScreen';
 import TabbedInterface from './TabbedInterface';
 import PrintManager from './PrintManager';
@@ -109,7 +111,7 @@ const App = () => {
       }
     };
     signIn();
-  }, [auth]);
+  }, []);
 
   // Firebase auth state observer
   useEffect(() => {
@@ -118,7 +120,7 @@ const App = () => {
       setIsAuthReady(true);
     });
     return () => unsubscribe();
-  }, [auth]);
+  }, []);
 
   // Firestore listeners for employees and payslips
   useEffect(() => {
@@ -131,7 +133,7 @@ const App = () => {
     const employeeCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/employees`);
     const payslipCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/payslips`);
 
-    const unsubscribeEmployees = onSnapshot(employeeCollectionRef, (snapshot) => {
+    const unsubscribeEmployees = onSnapshot(query(employeeCollectionRef, orderBy('name')), (snapshot) => {
       setEmployees(snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
@@ -241,15 +243,18 @@ const App = () => {
 
     const basic = parseFloat(currentEmployee.basicSalary) || 0;
     const costOfLivingAllowance = parseFloat(currentEmployee.costOfLivingAllowance) || 0;
-    const sss = getSssContribution(basic);
-    const philhealth = getPhilhealthContribution(basic);
-    const pagibig = getPagibigContribution(basic);
-    const ceap = getCeapContribution(basic);
+
+    // === FIX: Use statutory contributions directly from the employee object ===
+    // This ensures that any manually edited values are used in the calculation.
+    const sssContribution = parseFloat(currentEmployee.sssContribution) || 0;
+    const philhealthContribution = parseFloat(currentEmployee.philhealthContribution) || 0;
+    const pagibigContribution = parseFloat(currentEmployee.pagibigContribution) || 0;
+    const ceapContribution = parseFloat(currentEmployee.ceapContribution) || 0;
     
     const { pagibigLoanSTL, pagibigLoanCL, sssLoan, personalLoan, cashAdvance, canteen, tithings, otherDeductions } = payslipDeductions;
-    const totalStatutoryDeductions = sss + philhealth + pagibig + ceap;
-    const totalLoans = parseFloat(pagibigLoanSTL) + parseFloat(pagibigLoanCL) + parseFloat(sssLoan) + parseFloat(personalLoan) + parseFloat(cashAdvance);
-    const totalOtherDeductionsValue = (otherDeductions || []).reduce((sum, ded) => sum + (parseFloat(ded.amount) || 0), 0) + parseFloat(tithings) + parseFloat(canteen);
+    const totalStatutoryDeductions = sssContribution + philhealthContribution + pagibigContribution + ceapContribution;
+    const totalLoans = parseFloat(pagibigLoanSTL || 0) + parseFloat(pagibigLoanCL || 0) + parseFloat(sssLoan || 0) + parseFloat(personalLoan || 0) + parseFloat(cashAdvance || 0);
+    const totalOtherDeductionsValue = (otherDeductions || []).reduce((sum, ded) => sum + (parseFloat(ded.amount) || 0), 0) + parseFloat(tithings || 0) + parseFloat(canteen || 0);
     
     const grossSalary = basic + costOfLivingAllowance;
     const totalDeductions = totalStatutoryDeductions + totalLoans + totalOtherDeductionsValue;
@@ -263,7 +268,6 @@ const App = () => {
     };
 
     const payslipCollectionRef = collection(db, `artifacts/${appId}/users/${userId}/payslips`);
-    // Delete existing payslip for same employee and date range
     const q = query(
       payslipCollectionRef,
       where("employeeDocId", "==", currentEmployee.id),
@@ -284,24 +288,24 @@ const App = () => {
       grossSalary: grossSalary.toFixed(2),
       totalDeductions: totalDeductions.toFixed(2),
       netSalary: netSalary.toFixed(2),
-      sssContribution: sss.toFixed(2),
-      philhealthContribution: philhealth.toFixed(2),
-      pagibigContribution: pagibig.toFixed(2),
-      ceapContribution: ceap.toFixed(2),
-      tithings: parseFloat(tithings).toFixed(2),
-      pagibigLoanSTL: parseFloat(pagibigLoanSTL).toFixed(2),
-      pagibigLoanCL: parseFloat(pagibigLoanCL).toFixed(2),
-      sssLoan: parseFloat(sssLoan).toFixed(2),
-      personalLoan: parseFloat(personalLoan).toFixed(2),
-      cashAdvance: parseFloat(cashAdvance).toFixed(2),
-      canteen: parseFloat(canteen).toFixed(2),
+      // === FIX: Use the correct variables for the new payslip object ===
+      sssContribution: sssContribution.toFixed(2),
+      philhealthContribution: philhealthContribution.toFixed(2),
+      pagibigContribution: pagibigContribution.toFixed(2),
+      ceapContribution: ceapContribution.toFixed(2),
+      tithings: parseFloat(tithings || 0).toFixed(2),
+      pagibigLoanSTL: parseFloat(pagibigLoanSTL || 0).toFixed(2),
+      pagibigLoanCL: parseFloat(pagibigLoanCL || 0).toFixed(2),
+      sssLoan: parseFloat(sssLoan || 0).toFixed(2),
+      personalLoan: parseFloat(personalLoan || 0).toFixed(2),
+      cashAdvance: parseFloat(cashAdvance || 0).toFixed(2),
+      canteen: parseFloat(canteen || 0).toFixed(2),
       otherDeductions: (otherDeductions || []).map(d => ({ ...d, amount: parseFloat(d.amount || 0).toFixed(2) })),
       generatedAt: Timestamp.now(),
     };
 
     try {
       await addDoc(payslipCollectionRef, newPayslip);
-      // Return the new payslip object
       return newPayslip;
     } catch (e) {
       console.error("Error generating payslip:", e);
@@ -326,74 +330,81 @@ const App = () => {
 
   if (!isAuthReady) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100">
-        <div className="w-12 h-12 border-4 border-t-4 border-t-blue-500 border-gray-200 rounded-full animate-spin"></div>
+      <div className="flex items-center justify-center min-h-screen bg-slate-100">
+        <div className="w-16 h-16 border-8 border-t-8 border-t-blue-500 border-gray-200 rounded-full animate-spin"></div>
+        <p className="ml-4 text-xl text-slate-700 font-semibold">Loading...</p>
       </div>
     );
   }
 
   return (
-    <div className="App">
+    <div className="App bg-slate-50 min-h-screen">
       {userId ? (
         <EmployeeProvider>
-          <div className="flex justify-center my-4 z-20 relative space-x-8">
-            <div className="flex items-center space-x-4">
-              <div className="flex flex-col">
-                <label htmlFor="startDate" className="block text-sm font-medium text-gray-700">Start Date</label>
-                <DatePicker
-                  selected={startDate}
-                  onChange={(date) => setStartDate(date)}
-                  dateFormat="MMMM d, yyyy"
-                  className="border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 mt-1"
-                  id="startDate"
-                />
-              </div>
-              <div className="flex flex-col">
-                <label htmlFor="endDate" className="block text-sm font-medium text-gray-700">End Date</label>
-                <DatePicker
-                  selected={endDate}
-                  onChange={(date) => setEndDate(date)}
-                  dateFormat="MMMM d, yyyy"
-                  className="border rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 mt-1"
-                  id="endDate"
-                />
+          <Header userId={userId} handleSignOut={handleSignOut} />
+
+          <main>
+            <div className="bg-white shadow-md sticky top-24 z-40">
+              <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row items-center justify-between gap-6">
+                  <div className="flex items-center gap-x-6">
+                      <div className="flex flex-col">
+                          <label htmlFor="startDate" className="block text-sm font-medium text-slate-600 mb-1">Pay Period Start</label>
+                          <DatePicker
+                              selected={startDate}
+                              onChange={(date) => setStartDate(date)}
+                              dateFormat="MMMM d, yyyy"
+                              className="w-full form-input block rounded-lg border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                              id="startDate"
+                          />
+                      </div>
+                      <div className="flex flex-col">
+                          <label htmlFor="endDate" className="block text-sm font-medium text-slate-600 mb-1">Pay Period End</label>
+                          <DatePicker
+                              selected={endDate}
+                              onChange={(date) => setEndDate(date)}
+                              dateFormat="MMMM d, yyyy"
+                              className="w-full form-input block rounded-lg border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                              id="endDate"
+                          />
+                      </div>
+                  </div>
+                  <button
+                    onClick={handlePrintAllPayslips}
+                    className="w-full md:w-auto flex items-center justify-center gap-3 px-6 py-3 bg-green-600 text-white font-bold rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-300 transform hover:scale-105"
+                    type="button"
+                    aria-label="Print All Payslips"
+                  >
+                    <FaPrint className="h-5 w-5"/>
+                    <span>Print All Payslips</span>
+                  </button>
               </div>
             </div>
-            <button
-              onClick={handlePrintAllPayslips}
-              className="self-end px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-400"
-              type="button"
-              aria-label="Print All Payslips"
-            >
-              Print All Payslips
-            </button>
-          </div>
 
-          <TabbedInterface
-            employees={employees}
-            payslipHistory={payslipHistory}
-            currentEmployee={currentEmployee}
-            setCurrentEmployee={setCurrentEmployee}
-            error={error}
-            setError={setError}
-            payslipDetails={payslipDetails}
-            setPayslipDetails={setPayslipDetails}
-            handleSaveEmployee={handleSaveEmployee}
-            handleDeleteEmployee={handleDeleteEmployee}
-            handleDeletePayslip={handleDeletePayslip}
-            handleGeneratePayslip={handleGeneratePayslip}
-            resetForm={resetForm}
-            handleSelectEmployee={handleSelectEmployee}
-            handleSignOut={handleSignOut}
-            payslipDeductions={payslipDeductions}
-            setPayslipDeductions={setPayslipDeductions}
-            getSssContribution={getSssContribution}
-            getPhilhealthContribution={getPhilhealthContribution}
-            getPagibigContribution={getPagibigContribution}
-            getCeapContribution={getCeapContribution}
-            startDate={startDate}
-            endDate={endDate}
-          />
+            <TabbedInterface
+              employees={employees}
+              payslipHistory={payslipHistory}
+              currentEmployee={currentEmployee}
+              setCurrentEmployee={setCurrentEmployee}
+              error={error}
+              setError={setError}
+              payslipDetails={payslipDetails}
+              setPayslipDetails={setPayslipDetails}
+              handleSaveEmployee={handleSaveEmployee}
+              handleDeleteEmployee={handleDeleteEmployee}
+              handleDeletePayslip={handleDeletePayslip}
+              handleGeneratePayslip={handleGeneratePayslip}
+              resetForm={resetForm}
+              handleSelectEmployee={handleSelectEmployee}
+              payslipDeductions={payslipDeductions}
+              setPayslipDeductions={setPayslipDeductions}
+              getSssContribution={getSssContribution}
+              getPhilhealthContribution={getPhilhealthContribution}
+              getPagibigContribution={getPagibigContribution}
+              getCeapContribution={getCeapContribution}
+              startDate={startDate}
+              endDate={endDate}
+            />
+          </main>
           
           <PrintManager
             ref={printManagerRef}

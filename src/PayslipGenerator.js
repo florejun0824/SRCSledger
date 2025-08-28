@@ -1,7 +1,7 @@
 // src/PayslipGenerator.js
 import React, { useContext } from 'react';
 import PayslipDisplay from './PayslipDisplay';
-import { getSssContribution, getPhilhealthContribution, getPagibigContribution, getCeapContribution } from './utils';
+// Removed unused contribution calculation functions
 import { EmployeeContext } from './EmployeeContext'; // Import the EmployeeContext
 
 const PayslipGenerator = ({ employee, startDate, endDate, handleGeneratePayslip }) => {
@@ -24,18 +24,19 @@ const PayslipGenerator = ({ employee, startDate, endDate, handleGeneratePayslip 
     const canteen = parseFloat(employee.canteen) || 0;
     
     // Other Deductions
-    const otherDeductions = (employee.otherDeductions || []).reduce((sum, ded) => sum + (parseFloat(ded.amount) || 0), 0);
+    const otherDeductionsTotal = (employee.otherDeductions || []).reduce((sum, ded) => sum + (parseFloat(ded.amount) || 0), 0);
     const tithings = parseFloat(employee.tithings) || 0; // Assuming tithings is part of employee state or passed separately
 
-    // Social Contributions
-    const sssContribution = getSssContribution(basic);
-    const philhealthContribution = getPhilhealthContribution(basic);
-    const pagibigContribution = getPagibigContribution(basic);
-    const ceapContribution = getCeapContribution(basic);
+    // === FIX: Use statutory contributions directly from the employee object ===
+    // This ensures that any manually edited values are used in the calculation.
+    const sssContribution = parseFloat(employee.sssContribution) || 0;
+    const philhealthContribution = parseFloat(employee.philhealthContribution) || 0;
+    const pagibigContribution = parseFloat(employee.pagibigContribution) || 0;
+    const ceapContribution = parseFloat(employee.ceapContribution) || 0;
 
     // Totals
     const grossSalary = basic + costOfLivingAllowance;
-    const totalDeductions = sssContribution + philhealthContribution + pagibigContribution + ceapContribution + sssLoan + pagibigLoanSTL + pagibigLoanCL + personalLoan + cashAdvance + canteen + otherDeductions + tithings;
+    const totalDeductions = sssContribution + philhealthContribution + pagibigContribution + ceapContribution + sssLoan + pagibigLoanSTL + pagibigLoanCL + personalLoan + cashAdvance + canteen + otherDeductionsTotal + tithings;
     const netSalary = grossSalary - totalDeductions;
 
 	const formatDate = (date) => {

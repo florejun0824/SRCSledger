@@ -1,6 +1,8 @@
+// src/TabbedInterface.js
+
 import React, { useState, useContext } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faUsers, faHistory } from '@fortawesome/free-solid-svg-icons';
+import { faUsers, faHistory, faReceipt, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import EmployeeManagement from './EmployeeManagement';
 import PayslipHistory from './PayslipHistory';
 import PayslipDisplay from './PayslipDisplay';
@@ -33,7 +35,7 @@ const TabbedInterface = ({
 }) => {
   const [activeTab, setActiveTab] = useState('employeeManagement');
   const { showPayslipModal, setShowPayslipModal, selectedPayslipData } = useContext(EmployeeContext);
-  
+
   // Find the most recent payslip for the current employee from the payslipHistory prop
   const currentPayslip = payslipHistory.find(
     (payslip) => payslip.employeeDocId === currentEmployee?.id
@@ -53,98 +55,113 @@ const TabbedInterface = ({
     setShowPayslipModal(false);
   };
 
-  const layoutClass =
-    activeTab === 'employeeManagement'
-      ? 'min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 text-gray-900 flex flex-col lg:flex-row'
-      : 'min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 text-gray-900';
+  // Determine layout based on active tab
+  const layoutHasSidebar = activeTab === 'employeeManagement';
 
   return (
-    <div className={layoutClass}>
-      <div className="flex-grow w-full p-4 md:p-6 overflow-y-auto lg:flex-[2]">
-        <nav className="p-1.5 inline-flex items-center space-x-2 bg-white rounded-full shadow-lg mb-6">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => handleTabClick(tab.id)}
-              className={`flex items-center justify-center py-3 px-8 rounded-full text-base font-medium transition-all duration-300 focus:outline-none ${
-                activeTab === tab.id
-                  ? 'bg-blue-600 text-white shadow-md transform scale-105'
-                  : 'text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              <FontAwesomeIcon icon={tab.icon} className="mr-3 h-5 w-5" />
-              {tab.label}
-            </button>
-          ))}
-        </nav>
+    <div className="px-5 py-8">
+      <div className={`grid ${layoutHasSidebar ? 'lg:grid-cols-5' : 'grid-cols-1'} gap-8`}>
+        {/* Main Content Area */}
+        <div className={layoutHasSidebar ? 'lg:col-span-3' : 'col-span-1'}>
+          <div className="bg-white rounded-2xl shadow-xl p-2 md:p-4">
+            {/* Tab Navigation */}
+            <nav className="p-1.5 inline-flex items-center space-x-2 bg-slate-100 rounded-full shadow-inner mb-8">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => handleTabClick(tab.id)}
+                  className={`flex items-center justify-center py-3 px-6 rounded-full text-sm sm:text-base font-semibold transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+                    activeTab === tab.id
+                      ? 'bg-blue-600 text-white shadow-md'
+                      : 'text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  <FontAwesomeIcon icon={tab.icon} className="mr-3 h-5 w-5" />
+                  {tab.label}
+                </button>
+              ))}
+            </nav>
 
-        {error && (
-          <div
-            className="bg-red-50 border-l-4 border-red-400 text-red-700 p-4 rounded-lg relative mb-6 shadow-md"
-            role="alert"
-          >
-            <strong className="font-bold">Error:</strong>
-            <span className="block sm:inline ml-2">{error}</span>
-          </div>
-        )}
-
-        <div className="bg-white rounded-3xl shadow-xl p-8 min-h-[80vh] overflow-auto">
-          {activeTab === 'employeeManagement' && (
-            <EmployeeManagement
-              {...{
-                employees,
-                currentEmployee,
-                setCurrentEmployee,
-                payslipDetails,
-                setPayslipDetails,
-                handleSaveEmployee,
-                handleDeleteEmployee,
-                handleGeneratePayslip,
-                resetForm,
-                handleSelectEmployee,
-                payslipDeductions,
-                setPayslipDeductions,
-                getSssContribution,
-                getPhilhealthContribution,
-                getPagibigContribution,
-                getCeapContribution,
-              }}
-            />
-          )}
-          {activeTab === 'payslipHistory' && (
-            <PayslipHistory
-              {...{
-                payslipHistory,
-                employees,
-                handleDeletePayslip,
-                startDate,
-                endDate,
-              }}
-            />
-          )}
-        </div>
-      </div>
-
-      {activeTab === 'employeeManagement' && (
-        <div className="w-full lg:w-1/3 p-4 md:p-6 flex flex-col items-center overflow-y-auto bg-gray-50 border-l border-gray-200 rounded-3xl lg:rounded-l-none lg:rounded-r-3xl m-4 lg:m-0 lg:my-4 shadow-xl">
-          <h2 className="text-3xl font-extrabold text-gray-800 mb-6 self-start tracking-tight">
-            Payslip Preview
-          </h2>
-          <div className="w-full max-w-lg bg-white p-6 rounded-2xl shadow-lg relative border border-gray-200">
-            {currentPayslip ? (
-              <PayslipDisplay payslipData={currentPayslip} />
-            ) : (
-              <div className="text-center py-16 text-gray-400">
-                <p className="text-lg font-semibold mb-2">No payslip preview available.</p>
-                <p className="text-sm">
-                  Generate a payslip to see a preview here.
-                </p>
+            {/* Error Display */}
+            {error && (
+              <div
+                className="bg-red-100 border-l-4 border-red-500 text-red-800 p-4 rounded-r-lg relative mb-6 shadow-md flex items-center"
+                role="alert"
+              >
+                <FontAwesomeIcon icon={faExclamationTriangle} className="h-5 w-5 text-red-500 mr-3" />
+                <div>
+                  <strong className="font-bold">Error:</strong>
+                  <span className="block sm:inline ml-2">{error}</span>
+                </div>
               </div>
             )}
+
+            {/* Tab Content */}
+            <div>
+              {activeTab === 'employeeManagement' && (
+                <EmployeeManagement
+                  {...{
+                    employees,
+                    currentEmployee,
+                    setCurrentEmployee,
+                    payslipDetails,
+                    setPayslipDetails,
+                    handleSaveEmployee,
+                    handleDeleteEmployee,
+                    handleGeneratePayslip,
+                    resetForm,
+                    handleSelectEmployee,
+                    payslipDeductions,
+                    setPayslipDeductions,
+                    getSssContribution,
+                    getPhilhealthContribution,
+                    getPagibigContribution,
+                    getCeapContribution,
+                  }}
+                />
+              )}
+              {activeTab === 'payslipHistory' && (
+                <PayslipHistory
+                  {...{
+                    payslipHistory,
+                    employees,
+                    handleDeletePayslip,
+                    startDate,
+                    endDate,
+                  }}
+                />
+              )}
+            </div>
           </div>
         </div>
-      )}
 
+        {/* Sidebar for Payslip Preview */}
+        {layoutHasSidebar && (
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-2xl shadow-xl p-2 md:p-4 sticky top-32">
+              <h2 className="text-2xl font-bold text-slate-800 mb-6 pb-4 border-b border-slate-200 flex items-center">
+                <FontAwesomeIcon icon={faReceipt} className="mr-3 text-blue-500" />
+                Payslip Preview
+              </h2>
+              <div className="w-full bg-slate-50 p-4 rounded-xl shadow-inner border border-slate-200 min-h-[900px] flex items-center justify-center">
+                {currentPayslip ? (
+                  <PayslipDisplay payslipData={currentPayslip} />
+                ) : (
+                  <div className="text-center py-16 text-slate-400">
+                     <FontAwesomeIcon icon={faReceipt} className="text-6xl text-slate-300 mb-4" />
+                    <p className="text-lg font-semibold mb-2">No payslip preview available.</p>
+                    <p className="text-sm">
+                      Select an employee and generate a payslip to see a preview here.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Payslip Modal */}
       {showPayslipModal && (
         <PayslipModal
           payslipData={selectedPayslipData}

@@ -39,14 +39,17 @@ const EmployeeForm = ({
 
   // Effect to automatically compute statutory contributions when basicSalary changes
   useEffect(() => {
-    const basic = parseFloat(employee.basicSalary) || 0;
-    setEmployee(prev => ({
-      ...prev,
-      sssContribution: getSssContribution(basic).toFixed(2),
-      philhealthContribution: getPhilhealthContribution(basic).toFixed(2),
-      pagibigContribution: getPagibigContribution(basic).toFixed(2),
-      ceapContribution: getCeapContribution(basic).toFixed(2),
-    }));
+    // Only auto-compute if basicSalary is a valid number
+    if (employee.basicSalary && !isNaN(employee.basicSalary)) {
+      const basic = parseFloat(employee.basicSalary);
+      setEmployee(prev => ({
+        ...prev,
+        sssContribution: getSssContribution(basic).toFixed(2),
+        philhealthContribution: getPhilhealthContribution(basic).toFixed(2),
+        pagibigContribution: getPagibigContribution(basic).toFixed(2),
+        ceapContribution: getCeapContribution(basic).toFixed(2),
+      }));
+    }
   }, [employee.basicSalary, setEmployee, getSssContribution, getPhilhealthContribution, getPagibigContribution, getCeapContribution]);
 
 
@@ -125,6 +128,7 @@ const EmployeeForm = ({
             <span>New</span>
           </button>
         </div>
+      </div>
 
       {/* Employee Details Section */}
       <div className="space-y-6">
@@ -182,56 +186,57 @@ const EmployeeForm = ({
         </div>
       </div>
 
-      {/* Statutory Contributions Section */}
+      {/* Statutory Contributions Section -- NOW EDITABLE */}
       <div className="mt-8 pt-6 border-t border-gray-200">
-        <h4 className="text-2xl font-bold text-gray-800 mb-6">Statutory Contributions (Auto-computed)</h4>
+        <h4 className="text-2xl font-bold text-gray-800 mb-4">Statutory Contributions</h4>
+        <p className="text-sm text-gray-500 mb-6">Auto-computed from Basic Salary. Can be manually overridden.</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-          <div className="bg-gray-50 p-4 rounded-2xl shadow-neumorphic-light">
-            <label htmlFor="sssContribution" className="block text-sm font-semibold text-gray-500 mb-1">SSS Contribution</label>
+          <div>
+            <label htmlFor="sssContribution" className={labelClass}>SSS Contribution</label>
             <input
               type="number"
               id="sssContribution"
               name="sssContribution"
               value={employee.sssContribution}
-              readOnly
+              onChange={handleInputChange}
               placeholder="0.00"
-              className="mt-2 block w-full text-center bg-gray-100 border-none rounded-xl text-lg font-bold py-2 px-3 text-gray-700 shadow-neumorphic-inset-light"
+              className={inputClass}
             />
           </div>
-          <div className="bg-gray-50 p-4 rounded-2xl shadow-neumorphic-light">
-            <label htmlFor="philhealthContribution" className="block text-sm font-semibold text-gray-500 mb-1">Philhealth</label>
+          <div>
+            <label htmlFor="philhealthContribution" className={labelClass}>Philhealth</label>
             <input
               type="number"
               id="philhealthContribution"
               name="philhealthContribution"
               value={employee.philhealthContribution}
-              readOnly
+              onChange={handleInputChange}
               placeholder="0.00"
-              className="mt-2 block w-full text-center bg-gray-100 border-none rounded-xl text-lg font-bold py-2 px-3 text-gray-700 shadow-neumorphic-inset-light"
+              className={inputClass}
             />
           </div>
-          <div className="bg-gray-50 p-4 rounded-2xl shadow-neumorphic-light">
-            <label htmlFor="pagibigContribution" className="block text-sm font-semibold text-gray-500 mb-1">Pag-IBIG</label>
+          <div>
+            <label htmlFor="pagibigContribution" className={labelClass}>Pag-IBIG</label>
             <input
               type="number"
               id="pagibigContribution"
               name="pagibigContribution"
               value={employee.pagibigContribution}
-              readOnly
+              onChange={handleInputChange}
               placeholder="0.00"
-              className="mt-2 block w-full text-center bg-gray-100 border-none rounded-xl text-lg font-bold py-2 px-3 text-gray-700 shadow-neumorphic-inset-light"
+              className={inputClass}
             />
           </div>
-          <div className="bg-gray-50 p-4 rounded-2xl shadow-neumorphic-light flex flex-col justify-center">
-            <label htmlFor="ceapContribution" className="block text-sm font-semibold text-gray-500 mb-1 text-center">CEAP</label>
+          <div>
+            <label htmlFor="ceapContribution" className={labelClass}>CEAP</label>
             <input
               type="number"
               id="ceapContribution"
               name="ceapContribution"
               value={employee.ceapContribution}
-              readOnly
+              onChange={handleInputChange}
               placeholder="0.00"
-              className="mt-2 block w-full text-center bg-gray-100 border-none rounded-xl text-lg font-bold py-2 px-3 text-gray-700 shadow-neumorphic-inset-light"
+              className={inputClass}
             />
           </div>
         </div>

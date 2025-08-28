@@ -99,24 +99,13 @@ export const getSssContribution = (salary) => {
 };
 
 /**
- * Calculates the PhilHealth contribution (employee's share).
+ * Calculates the PhilHealth contribution (2.5% of basic salary).
  * @param {number} salary - The employee's basic monthly salary.
  * @returns {number} The employee's PhilHealth contribution.
  */
 export const getPhilhealthContribution = (salary) => {
-  const rate = 0.05; // 5.0%
-  const minSalary = 10000;
-  const maxSalary = 100000;
-  let premium = 0;
-
-  if (salary < minSalary) {
-    premium = minSalary * rate;
-  } else if (salary > maxSalary) {
-    premium = maxSalary * rate;
-  } else {
-    premium = salary * rate;
-  }
-  return premium / 2; // Employee's share is 50%
+  const rate = 0.025; // 2.5%
+  return (parseFloat(salary) || 0) * rate;
 };
 
 /**

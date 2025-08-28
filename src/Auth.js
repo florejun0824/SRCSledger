@@ -42,19 +42,7 @@ const Auth = ({ onAuthChange, children }) => {
 
   return (
     <div>
-      <div className="bg-indigo-600 p-6 text-white text-center rounded-t-2xl relative">
-        <h1 className="text-3xl sm:text-4xl font-bold mb-2">SRCS Bookkeeper's System</h1>
-        <p className="text-indigo-200 text-lg">Manage employees and generate detailed payslips</p>
-        <p className="text-sm text-indigo-200 mt-2">
-          Your User ID: <span className="font-mono bg-indigo-700 px-2 py-1 rounded-md">{userId}</span>
-        </p>
-        <button
-          onClick={handleLogout}
-          className="absolute top-4 right-4 bg-indigo-700 hover:bg-indigo-800 text-white text-sm font-semibold py-2 px-4 rounded-lg shadow-md transition duration-150 ease-in-out"
-        >
-          Logout
-        </button>
-      </div>
+
       {children}
     </div>
   );
