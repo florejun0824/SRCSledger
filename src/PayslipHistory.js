@@ -22,6 +22,19 @@ const PayslipHistory = ({ payslipHistory, handleDeletePayslip, employees }) => {
     if (isNaN(date.getTime())) return 'Invalid Date';
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
   };
+  
+  // Create a map for quick employee name lookup
+  const employeeMap = employees.reduce((acc, employee) => {
+    acc[employee.id] = employee.name;
+    return acc;
+  }, {});
+
+  // Sort the payslipHistory alphabetically by employee name
+  const sortedPayslipHistory = [...payslipHistory].sort((a, b) => {
+    const nameA = employeeMap[a.employeeDocId]?.toLowerCase() || '';
+    const nameB = employeeMap[b.employeeDocId]?.toLowerCase() || '';
+    return nameA.localeCompare(nameB);
+  });
 
   return (
     <div className="p-4">
@@ -37,8 +50,8 @@ const PayslipHistory = ({ payslipHistory, handleDeletePayslip, employees }) => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {payslipHistory.length > 0 ? (
-              payslipHistory.map((p) => (
+            {sortedPayslipHistory.length > 0 ? (
+              sortedPayslipHistory.map((p) => (
                 <tr key={p.id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{p.name}</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatDate(p.startDate)} - {formatDate(p.endDate)}</td>

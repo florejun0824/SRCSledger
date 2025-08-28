@@ -42,7 +42,14 @@ const MonthlyReport = ({ payslipHistory, startDate, endDate }) => {
       aggregatedData[employeeId].philhealthContribution += parseFloat(p.philhealthContribution || 0);
       aggregatedData[employeeId].pagibigContribution += parseFloat(p.pagibigContribution || 0);
       aggregatedData[employeeId].ceapContribution += parseFloat(p.ceapContribution || 0);
-      const loans = parseFloat(p.sssLoan || 0) + parseFloat(p.pagibigLoanSTL || 0) + parseFloat(p.pagibigLoanCL || 0) + parseFloat(p.personalLoan || 0) + parseFloat(p.cashAdvance || 0);
+      
+      // FIX: Ensure loan values are non-negative before summing
+      const loans = Math.max(0, parseFloat(p.sssLoan || 0)) +
+                    Math.max(0, parseFloat(p.pagibigLoanSTL || 0)) +
+                    Math.max(0, parseFloat(p.pagibigLoanCL || 0)) +
+                    Math.max(0, parseFloat(p.personalLoan || 0)) +
+                    Math.max(0, parseFloat(p.cashAdvance || 0));
+                    
       aggregatedData[employeeId].totalLoans += loans;
       const others = parseFloat(p.canteen || 0) + parseFloat(p.tithings || 0) + (p.otherDeductions || []).reduce((acc, curr) => acc + parseFloat(curr.amount || 0), 0);
       aggregatedData[employeeId].otherDeductions += others;
@@ -50,7 +57,8 @@ const MonthlyReport = ({ payslipHistory, startDate, endDate }) => {
       aggregatedData[employeeId].netSalary += parseFloat(p.netSalary || 0);
     });
 
-    return Object.values(aggregatedData);
+    // Sort the aggregated data alphabetically by employee name
+    return Object.values(aggregatedData).sort((a, b) => a.name.localeCompare(b.name));
   };
   
   const aggregatedPayslips = calculateAggregatedData();
