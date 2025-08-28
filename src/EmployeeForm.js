@@ -1,7 +1,7 @@
 // src/EmployeeForm.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ConfirmationModal from './ConfirmationModal';
-import { FaTrashAlt, FaSave, FaPlus, FaTimes, FaUserPlus, FaFileInvoiceDollar, FaCheckCircle, FaUndo } from 'react-icons/fa';
+import { FaTrashAlt, FaSave, FaPlus, FaTimes, FaUserPlus, FaFileInvoiceDollar, FaCheckCircle, FaUndo, FaChevronDown, FaSearch } from 'react-icons/fa';
 
 const EmployeeForm = ({
   employee,
@@ -24,8 +24,22 @@ const EmployeeForm = ({
 }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [employeeToDelete, setEmployeeToDelete] = useState(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const dropdownRef = useRef(null);
 
   const isEditing = !!employee.id;
+
+  // Effect to handle clicking outside the dropdown to close it
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -91,6 +105,16 @@ const EmployeeForm = ({
     }
   };
 
+  const handleSelectAndClose = (id) => {
+    handleSelectEmployee(id);
+    setIsDropdownOpen(false);
+    setSearchTerm('');
+  };
+  
+  const filteredEmployees = (employees || []).filter(emp =>
+    emp.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   const inputClass = "w-full p-4 border border-gray-300 rounded-xl shadow-inner focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300";
   const labelClass = "block text-sm font-semibold text-gray-700 mb-2";
   
@@ -103,22 +127,58 @@ const EmployeeForm = ({
         </h2>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
           <label htmlFor="employeeSelect" className="block text-base font-semibold text-gray-700 self-center whitespace-nowrap">Select Employee:</label>
-          <div className="relative flex-grow sm:flex-grow-0">
-            <select
-              id="employeeSelect"
-              onChange={(e) => handleSelectEmployee(e.target.value)}
-              value={isEditing ? employee.id : ''}
-              className="block w-full min-w-[250px] pl-5 pr-12 py-3 text-lg border-none rounded-2xl shadow-neumorphic-inset-light focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300 appearance-none bg-gray-50 text-gray-800"
+          {/* --- HIGHLY ENHANCED DROPDOWN --- */}
+          <div className="relative flex-grow sm:flex-grow-0" ref={dropdownRef}>
+            <button
+              type="button"
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="block w-full min-w-[250px] pl-5 pr-4 py-3 text-lg border-none rounded-2xl shadow-neumorphic-inset-light focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300 bg-gray-50 text-gray-800 flex items-center justify-between text-left"
             >
-              <option value="">-- Select an Employee --</option>
-              {(employees || []).map((emp) => (
-                <option key={emp.id} value={emp.id}>{emp.name}</option>
-              ))}
-            </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-600">
-              <svg className="fill-current h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
-            </div>
+              <span className={isEditing ? 'text-gray-800 font-semibold' : 'text-gray-500'}>
+                {employee.name || '-- Select an Employee --'}
+              </span>
+              <FaChevronDown className={`text-gray-400 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+            <div
+              className={`absolute mt-2 w-full origin-top-right bg-white rounded-xl shadow-2xl z-20 ring-1 ring-black ring-opacity-5 focus:outline-none transition-all duration-200 ease-out ${isDropdownOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}
+            >
+                <div className="p-2 border-b border-gray-200">
+                  <div className="relative">
+                    <FaSearch className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                    />
+                  </div>
+                </div>
+                <ul className="max-h-60 overflow-y-auto p-2">
+                  <li
+                    onClick={() => handleSelectAndClose('')}
+                    className="px-3 py-2.5 cursor-pointer rounded-lg hover:bg-indigo-50 text-gray-700 font-semibold"
+                  >
+                    -- Select an Employee --
+                  </li>
+                  {filteredEmployees.length > 0 ? (
+                    filteredEmployees.map((emp) => (
+                      <li
+                        key={emp.id}
+                        onClick={() => handleSelectAndClose(emp.id)}
+                        className="flex items-center justify-between p-3 cursor-pointer rounded-lg hover:bg-indigo-50 transition-colors duration-150"
+                      >
+                        <span className="font-medium text-gray-800">{emp.name}</span>
+                        {emp.employeeId && <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">{emp.employeeId}</span>}
+                      </li>
+                    ))
+                  ) : (
+                    <li className="px-3 py-2.5 text-center text-gray-500 italic">No matches found.</li>
+                  )}
+                </ul>
+              </div>
           </div>
+          {/* --- END ENHANCED DROPDOWN --- */}
           <button
             onClick={resetForm}
             className="flex-shrink-0 px-6 py-3 bg-blue-600 text-white font-bold rounded-2xl shadow-neumorphic-light hover:shadow-neumorphic-hover transition-all duration-300 transform hover:scale-105 flex items-center gap-3"
@@ -141,7 +201,7 @@ const EmployeeForm = ({
               name="name"
               value={employee.name}
               onChange={handleInputChange}
-              placeholder="JUAN DELA CRUZ"
+              placeholder="e.g., DELA CRUZ, JUAN C."
               className={inputClass}
             />
           </div>

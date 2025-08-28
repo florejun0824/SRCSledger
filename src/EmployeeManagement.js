@@ -1,6 +1,6 @@
 // src/EmployeeManagement.js
-import React, { useContext, useEffect } from 'react';
-import { FaTrashAlt, FaSave, FaUserPlus, FaTimes, FaFileInvoiceDollar, FaUndo, FaPlus } from 'react-icons/fa';
+import React, { useContext, useEffect, useState, useRef } from 'react';
+import { FaTrashAlt, FaSave, FaUserPlus, FaTimes, FaFileInvoiceDollar, FaUndo, FaPlus, FaChevronDown, FaSearch } from 'react-icons/fa';
 import { EmployeeContext } from './EmployeeContext';
 
 const EmployeeManagement = ({
@@ -20,6 +20,20 @@ const EmployeeManagement = ({
   getCeapContribution,
 }) => {
   const { setSelectedPayslipData, setShowPayslipModal } = useContext(EmployeeContext);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const dropdownRef = useRef(null);
+
+  // Effect to handle clicking outside the dropdown to close it
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -77,6 +91,16 @@ const EmployeeManagement = ({
     }
     await handleGeneratePayslip();
   };
+  
+  const handleSelectAndClose = (id) => {
+    handleSelectEmployee(id);
+    setIsDropdownOpen(false);
+    setSearchTerm('');
+  };
+  
+  const filteredEmployees = employees.filter(emp =>
+    emp.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const isEditing = !!currentEmployee.id;
 
@@ -91,22 +115,59 @@ const EmployeeManagement = ({
       {/* Employee Selector & Actions */}
       <div className={`${sectionCardClass} -m-1`}>
         <div className="flex flex-col md:flex-row items-center gap-4">
-          <div className="relative flex-grow w-full">
+          {/* --- HIGHLY ENHANCED DROPDOWN --- */}
+          <div className="relative flex-grow w-full" ref={dropdownRef}>
             <label htmlFor="employeeSelect" className={labelClass}>Select Employee</label>
-            <select
-              id="employeeSelect"
-              onChange={(e) => handleSelectEmployee(e.target.value)}
-              value={currentEmployee.id || ''}
-              className={`${inputClass} font-semibold`}
+            <button
+              type="button"
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className={`${inputClass} flex items-center justify-between text-left font-semibold`}
             >
-              <option value="">-- New Employee --</option>
-              {employees.map((emp) => (
-                <option key={emp.id} value={emp.id}>
-                  {emp.name}
-                </option>
-              ))}
-            </select>
+              <span className={currentEmployee.id ? 'text-slate-800' : 'text-slate-400'}>
+                {currentEmployee.name || 'Select from list or create new'}
+              </span>
+              <FaChevronDown className={`text-slate-400 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+            <div
+              className={`absolute mt-2 w-full origin-top-right bg-white rounded-xl shadow-2xl z-20 ring-1 ring-black ring-opacity-5 focus:outline-none transition-all duration-200 ease-out ${isDropdownOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}
+            >
+              <div className="p-2">
+                <div className="relative">
+                  <FaSearch className="absolute top-1/2 left-3 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Search by name..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+              <ul className="max-h-60 overflow-y-auto p-2">
+                <li
+                  onClick={() => handleSelectAndClose('')}
+                  className="px-3 py-2.5 text-sm cursor-pointer rounded-lg hover:bg-blue-50 text-slate-700 font-semibold"
+                >
+                  -- New Employee --
+                </li>
+                {filteredEmployees.length > 0 ? (
+                  filteredEmployees.map((emp) => (
+                    <li
+                      key={emp.id}
+                      onClick={() => handleSelectAndClose(emp.id)}
+                      className="flex items-center justify-between text-sm p-3 cursor-pointer rounded-lg hover:bg-blue-50 hover:scale-[1.02] transition-all duration-150"
+                    >
+                      <span className="font-medium text-slate-800">{emp.name}</span>
+                      {emp.employeeId && <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">{emp.employeeId}</span>}
+                    </li>
+                  ))
+                ) : (
+                  <li className="px-3 py-2.5 text-sm text-center text-slate-500">No employees found.</li>
+                )}
+              </ul>
+            </div>
           </div>
+          {/* --- END ENHANCED DROPDOWN --- */}
           <button
             onClick={resetForm}
             className="w-full md:w-auto mt-4 md:mt-7 flex-shrink-0 px-5 py-3 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2"
@@ -123,7 +184,7 @@ const EmployeeManagement = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
           <div>
             <label htmlFor="name" className={labelClass}>Employee Full Name</label>
-            <input type="text" id="name" name="name" value={currentEmployee.name} onChange={handleInputChange} placeholder="JUAN DELA CRUZ" className={inputClass} />
+            <input type="text" id="name" name="name" value={currentEmployee.name} onChange={handleInputChange} placeholder="e.g., DELA CRUZ, JUAN C." className={inputClass} />
           </div>
           <div>
             <label htmlFor="employeeId" className={labelClass}>Employee ID (Optional)</label>

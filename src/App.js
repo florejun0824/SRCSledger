@@ -19,7 +19,7 @@ import {
 } from 'firebase/firestore';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { FaPrint } from 'react-icons/fa';
+import { FaPrint, FaCheckCircle } from 'react-icons/fa';
 
 import Header from './Header'; // Import the new Header component
 import LoginScreen from './LoginScreen';
@@ -93,9 +93,18 @@ const App = () => {
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
   const [payslipDeductions, setPayslipDeductions] = useState(initialPayslipDeductionsState);
+  const [toast, setToast] = useState({ show: false, message: '' });
 
   // Ref to access PrintManager methods
   const printManagerRef = useRef();
+
+  // Function to show toast notification
+  const showToast = (message) => {
+    setToast({ show: true, message });
+    setTimeout(() => {
+      setToast({ show: false, message: '' });
+    }, 3000); // Hide after 3 seconds
+  };
 
   // Sign in with custom token on app load if available
   useEffect(() => {
@@ -183,12 +192,16 @@ const App = () => {
         costOfLivingAllowance: currentEmployee.costOfLivingAllowance.toString(),
       };
       
-      if (currentEmployee.id && !currentEmployee.id.startsWith('new-doc-')) {
+      const isUpdating = currentEmployee.id && !currentEmployee.id.startsWith('new-doc-');
+      
+      if (isUpdating) {
         await setDoc(doc(db, `artifacts/${appId}/users/${userId}/employees`, currentEmployee.id), employeeToSave, { merge: true });
+        showToast('Employee profile updated successfully!');
       } else {
         const { id, ...dataToSave } = employeeToSave;
         const docRef = await addDoc(collection(db, `artifacts/${appId}/users/${userId}/employees`), dataToSave);
         setCurrentEmployee(prev => ({ ...prev, id: docRef.id }));
+        showToast('New employee saved successfully!');
       }
       resetForm();
       await handleGeneratePayslip();
@@ -339,6 +352,17 @@ const App = () => {
 
   return (
     <div className="App bg-slate-50 min-h-screen">
+      {/* Toast Notification */}
+      {toast.show && (
+        <div
+          className="fixed top-28 right-5 z-[100] flex items-center gap-3 bg-green-600 text-white py-3 px-5 rounded-lg shadow-2xl transition-transform duration-300 transform"
+          style={{ transform: 'translateX(0)', opacity: 1 }}
+        >
+          <FaCheckCircle />
+          <span className="font-semibold">{toast.message}</span>
+        </div>
+      )}
+      
       {userId ? (
         <EmployeeProvider>
           <Header userId={userId} handleSignOut={handleSignOut} />
