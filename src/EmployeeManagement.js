@@ -230,7 +230,7 @@ const EmployeeManagement = ({
          <h3 className={sectionTitleClass}>Payslip Deductions</h3>
          <p className="text-xs text-slate-500 -mt-4 mb-6">These fields are for the current payslip only and will not be saved to the employee's profile.</p>
          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
-            {['sssLoan', 'pagibigLoanSTL', 'pagibigLoanCL', 'personalLoan', 'cashAdvance', 'canteen', 'tithings'].map(field => {
+            {['SSSLoan', 'PagibigLoanSTL', 'PagibigLoanCL', 'PersonalLoan', 'CashAdvance', 'Canteen', 'Tithings'].map(field => {
                 const label = field.replace(/([A-Z])/g, ' $1').replace('STL', '-STL').replace('CL', '-CL').trim();
                 const name = field.charAt(0).toLowerCase() + field.slice(1);
                 return (

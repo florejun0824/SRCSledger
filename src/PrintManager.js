@@ -64,7 +64,7 @@ const renderPayslipToHtml = (payslipData) => {
         <div className="text-sm mb-4 border-b border-gray-200 pb-3">
           <div className="flex justify-between mb-1">
             <span className="font-semibold text-gray-700">Employee Name:</span>
-            <span>{data.name}</span>
+            <span><h2 className="text-md font-bold text-gray-700 mb-2">{data.name}</h2></span>
           </div>
           <div className="flex justify-between">
             <span className="font-semibold text-gray-700">Employee ID:</span>
