@@ -15,6 +15,13 @@ const PayslipHistory = ({ payslipHistory, handleDeletePayslip, employees }) => {
       setShowPayslipModal(true); // Open the modal
     }
   };
+  
+  // New function with confirmation
+  const handleDeleteWithConfirmation = (payslipId, employeeName) => {
+    if (window.confirm(`Are you sure you want to delete the payslip for ${employeeName}? This action cannot be undone.`)) {
+      handleDeletePayslip(payslipId);
+    }
+  };
 
   const formatDate = (dateInput) => {
     if (!dateInput) return 'N/A';
@@ -65,7 +72,7 @@ const PayslipHistory = ({ payslipHistory, handleDeletePayslip, employees }) => {
                       <FontAwesomeIcon icon={faEye} />
                     </button>
                     <button
-                      onClick={() => handleDeletePayslip(p.id)}
+                      onClick={() => handleDeleteWithConfirmation(p.id, p.name)}
                       className="text-red-600 hover:text-red-900"
                       title="Delete Payslip"
                     >

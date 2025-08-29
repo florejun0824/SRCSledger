@@ -31,6 +31,7 @@ const MonthlyReport = ({ payslipHistory, startDate, endDate }) => {
           totalLoans: 0,
           canteen: 0,
           tithings: 0,
+          late: 0,
           otherDeductions: 0,
           totalDeductions: 0,
           netSalary: 0,
@@ -55,6 +56,7 @@ const MonthlyReport = ({ payslipHistory, startDate, endDate }) => {
       aggregatedData[employeeId].totalLoans += loans;
       aggregatedData[employeeId].canteen += parseFloat(p.canteen || 0);
       aggregatedData[employeeId].tithings += parseFloat(p.tithings || 0);
+      aggregatedData[employeeId].late += parseFloat(p.late || 0);
       const others = (p.otherDeductions || []).reduce((acc, curr) => acc + parseFloat(curr.amount || 0), 0);
       aggregatedData[employeeId].otherDeductions += others;
       aggregatedData[employeeId].totalDeductions += parseFloat(p.totalDeductions || 0);
@@ -72,7 +74,7 @@ const MonthlyReport = ({ payslipHistory, startDate, endDate }) => {
       basicSalary: 0, // Added Basic Salary
       costOfLivingAllowance: 0, // Added Cost of Living Allowance
       grossSalary: 0, sssContribution: 0, philhealthContribution: 0, pagibigContribution: 0,
-      ceapContribution: 0, totalLoans: 0, canteen: 0, tithings: 0, otherDeductions: 0, totalDeductions: 0, netSalary: 0,
+      ceapContribution: 0, totalLoans: 0, canteen: 0, tithings: 0, late: 0, otherDeductions: 0, totalDeductions: 0, netSalary: 0,
     };
     // Now iterate over the aggregated data
     aggregatedPayslips.forEach(p => {
@@ -86,6 +88,7 @@ const MonthlyReport = ({ payslipHistory, startDate, endDate }) => {
       totals.totalLoans += p.totalLoans;
       totals.canteen += p.canteen;
       totals.tithings += p.tithings;
+      totals.late += p.late;
       totals.otherDeductions += p.otherDeductions;
       totals.totalDeductions += p.totalDeductions;
       totals.netSalary += p.netSalary;
@@ -111,11 +114,11 @@ const MonthlyReport = ({ payslipHistory, startDate, endDate }) => {
     const dataCellStyle = { border: { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } }, alignment: { horizontal: 'right' } };
 
     // --- REPORT HEADER ---
-    worksheet.mergeCells('A1:O1');
+    worksheet.mergeCells('A1:P1');
     worksheet.getCell('A1').value = 'Monthly Payroll Report';
     worksheet.getCell('A1').style = titleStyle;
 
-    worksheet.mergeCells('A2:O2');
+    worksheet.mergeCells('A2:P2');
     worksheet.getCell('A2').value = `For period: ${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()}`;
     worksheet.getCell('A2').style = subtitleStyle;
     worksheet.getRow(2).height = 20;
@@ -123,7 +126,7 @@ const MonthlyReport = ({ payslipHistory, startDate, endDate }) => {
     // --- TABLE HEADERS ---
     worksheet.getRow(4).values = [
         "Employee", "Employee ID", "Basic Salary", "Cost of Living Allowance", "Gross Salary", "SSS", "PhilHealth", "Pag-IBIG", "CEAP", 
-        "Loans", "Canteen", "Tithings", "Others", "Total Deductions", "Net Salary"
+        "Loans", "Canteen", "Tithings", "Late", "Others", "Total Deductions", "Net Salary"
     ];
     worksheet.getRow(4).eachCell((cell) => { cell.style = headerStyle; });
     worksheet.getCell('A4').style.alignment = { horizontal: 'left' }; // Employee name left-aligned
@@ -145,6 +148,7 @@ const MonthlyReport = ({ payslipHistory, startDate, endDate }) => {
         p.totalLoans,
         p.canteen,
         p.tithings,
+        p.late,
         p.otherDeductions,
         p.totalDeductions,
         p.netSalary,
@@ -169,7 +173,7 @@ const MonthlyReport = ({ payslipHistory, startDate, endDate }) => {
         });
       }
        // Bold net salary
-      row.getCell('O').font = { bold: true };
+      row.getCell('P').font = { bold: true };
     });
 
     // --- TOTALS ROW ---
@@ -179,7 +183,7 @@ const MonthlyReport = ({ payslipHistory, startDate, endDate }) => {
       reportTotals.costOfLivingAllowance,
       reportTotals.grossSalary, reportTotals.sssContribution, reportTotals.philhealthContribution,
       reportTotals.pagibigContribution, reportTotals.ceapContribution, reportTotals.totalLoans,
-      reportTotals.canteen, reportTotals.tithings, reportTotals.otherDeductions, reportTotals.totalDeductions, reportTotals.netSalary
+      reportTotals.canteen, reportTotals.tithings, reportTotals.late, reportTotals.otherDeductions, reportTotals.totalDeductions, reportTotals.netSalary
     ]);
     totalsRow.eachCell((cell, colNumber) => {
       cell.style = totalRowStyle;
@@ -203,9 +207,10 @@ const MonthlyReport = ({ payslipHistory, startDate, endDate }) => {
     worksheet.getColumn('J').width = 15; // Loans
     worksheet.getColumn('K').width = 15; // Canteen
     worksheet.getColumn('L').width = 15; // Tithings
-    worksheet.getColumn('M').width = 15; // Others
-    worksheet.getColumn('N').width = 18; // Total Deductions
-    worksheet.getColumn('O').width = 18; // Net Salary
+    worksheet.getColumn('M').width = 15; // Late
+    worksheet.getColumn('N').width = 15; // Others
+    worksheet.getColumn('O').width = 18; // Total Deductions
+    worksheet.getColumn('P').width = 18; // Net Salary
     
     // --- GENERATE & DOWNLOAD FILE ---
     const buffer = await workbook.xlsx.writeBuffer();
@@ -246,21 +251,22 @@ const MonthlyReport = ({ payslipHistory, startDate, endDate }) => {
           
           {aggregatedPayslips.length > 0 ? (
             <div className="overflow-x-auto relative rounded-lg shadow-inner border border-gray-300 max-h-[70vh]">
-              <table className="w-full min-w-[1400px] table-fixed">
-                <thead className="sticky top-0 bg-white">
+              <table className="w-full min-w-[1500px] table-fixed">
+                <thead className="sticky top-0 bg-white z-20">
                   <tr>
-                    <th className={`${tableHeaderClass} text-left rounded-tl-lg`} style={{ width: '15%' }}>Employee</th>
-                    <th className={`${tableHeaderClass} text-right`} style={{ width: '8%' }}>Basic Salary</th>
+                    <th className={`${tableHeaderClass} text-left rounded-tl-lg sticky left-0 bg-gray-100`} style={{ width: '15%' }}>Employee</th>
+                    <th className={`${tableHeaderClass} text-right`} style={{ width: '7%' }}>Basic Salary</th>
                     <th className={`${tableHeaderClass} text-right`} style={{ width: '8%' }}>Cost of Living Allowance</th>
-                    <th className={`${tableHeaderClass} text-right`} style={{ width: '8%' }}>Gross Salary</th>
-                    <th className={`${tableHeaderClass} text-right`} style={{ width: '8%' }}>SSS</th>
-                    <th className={`${tableHeaderClass} text-right`} style={{ width: '8%' }}>PhilHealth</th>
-                    <th className={`${tableHeaderClass} text-right`} style={{ width: '8%' }}>Pag-IBIG</th>
-                    <th className={`${tableHeaderClass} text-right`} style={{ width: '8%' }}>CEAP</th>
-                    <th className={`${tableHeaderClass} text-right`} style={{ width: '8%' }}>Loans</th>
-                    <th className={`${tableHeaderClass} text-right`} style={{ width: '8%' }}>Canteen</th>
-                    <th className={`${tableHeaderClass} text-right`} style={{ width: '8%' }}>Tithings</th>
-                    <th className={`${tableHeaderClass} text-right`} style={{ width: '8%' }}>Others</th>
+                    <th className={`${tableHeaderClass} text-right`} style={{ width: '7%' }}>Gross Salary</th>
+                    <th className={`${tableHeaderClass} text-right`} style={{ width: '7%' }}>SSS</th>
+                    <th className={`${tableHeaderClass} text-right`} style={{ width: '7%' }}>PhilHealth</th>
+                    <th className={`${tableHeaderClass} text-right`} style={{ width: '7%' }}>Pag-IBIG</th>
+                    <th className={`${tableHeaderClass} text-right`} style={{ width: '7%' }}>CEAP</th>
+                    <th className={`${tableHeaderClass} text-right`} style={{ width: '7%' }}>Loans</th>
+                    <th className={`${tableHeaderClass} text-right`} style={{ width: '7%' }}>Canteen</th>
+                    <th className={`${tableHeaderClass} text-right`} style={{ width: '7%' }}>Tithings</th>
+                    <th className={`${tableHeaderClass} text-right`} style={{ width: '7%' }}>Late</th>
+                    <th className={`${tableHeaderClass} text-right`} style={{ width: '7%' }}>Others</th>
                     <th className={`${tableHeaderClass} text-right`} style={{ width: '8%' }}>Total Deductions</th>
                     <th className={`${tableHeaderClass} text-right rounded-tr-lg`} style={{ width: '8%' }}>Net Salary</th>
                   </tr>
@@ -269,21 +275,22 @@ const MonthlyReport = ({ payslipHistory, startDate, endDate }) => {
                   {aggregatedPayslips.map((p, index) => {
                     return (
                       <tr key={index} className="transition-colors duration-200 ease-in-out hover:bg-blue-50 even:bg-white odd:bg-gray-50/70">
-                        <td className={`${bodyCellClass} text-left`} style={{ width: '15%' }}>
+                        <td className={`${bodyCellClass} text-left sticky left-0 z-10 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/70'}`} style={{ width: '15%' }}>
                           <div className="font-semibold text-gray-900">{p.name}</div>
                           <div className="text-xs text-gray-500">{p.employeeId}</div>
                         </td>
-                        <td className={bodyCellRightClass} style={{ width: '8%' }}>{formatCurrency(p.basicSalary)}</td>
+                        <td className={bodyCellRightClass} style={{ width: '7%' }}>{formatCurrency(p.basicSalary)}</td>
                         <td className={bodyCellRightClass} style={{ width: '8%' }}>{formatCurrency(p.costOfLivingAllowance)}</td>
-                        <td className={`${bodyCellRightClass} font-semibold`} style={{ width: '8%' }}>{formatCurrency(p.grossSalary)}</td>
-                        <td className={bodyCellRightClass} style={{ width: '8%' }}>{formatCurrency(p.sssContribution)}</td>
-                        <td className={bodyCellRightClass} style={{ width: '8%' }}>{formatCurrency(p.philhealthContribution)}</td>
-                        <td className={bodyCellRightClass} style={{ width: '8%' }}>{formatCurrency(p.pagibigContribution)}</td>
-                        <td className={bodyCellRightClass} style={{ width: '8%' }}>{formatCurrency(p.ceapContribution)}</td>
-                        <td className={bodyCellRightClass} style={{ width: '8%' }}>{formatCurrency(p.totalLoans)}</td>
-                        <td className={bodyCellRightClass} style={{ width: '8%' }}>{formatCurrency(p.canteen)}</td>
-                        <td className={bodyCellRightClass} style={{ width: '8%' }}>{formatCurrency(p.tithings)}</td>
-                        <td className={bodyCellRightClass} style={{ width: '8%' }}>{formatCurrency(p.otherDeductions)}</td>
+                        <td className={`${bodyCellRightClass} font-semibold`} style={{ width: '7%' }}>{formatCurrency(p.grossSalary)}</td>
+                        <td className={bodyCellRightClass} style={{ width: '7%' }}>{formatCurrency(p.sssContribution)}</td>
+                        <td className={bodyCellRightClass} style={{ width: '7%' }}>{formatCurrency(p.philhealthContribution)}</td>
+                        <td className={bodyCellRightClass} style={{ width: '7%' }}>{formatCurrency(p.pagibigContribution)}</td>
+                        <td className={bodyCellRightClass} style={{ width: '7%' }}>{formatCurrency(p.ceapContribution)}</td>
+                        <td className={bodyCellRightClass} style={{ width: '7%' }}>{formatCurrency(p.totalLoans)}</td>
+                        <td className={bodyCellRightClass} style={{ width: '7%' }}>{formatCurrency(p.canteen)}</td>
+                        <td className={bodyCellRightClass} style={{ width: '7%' }}>{formatCurrency(p.tithings)}</td>
+                        <td className={bodyCellRightClass} style={{ width: '7%' }}>{formatCurrency(p.late)}</td>
+                        <td className={bodyCellRightClass} style={{ width: '7%' }}>{formatCurrency(p.otherDeductions)}</td>
                         <td className={`${bodyCellRightClass} font-semibold text-red-600`} style={{ width: '8%' }}>{formatCurrency(p.totalDeductions)}</td>
                         <td className={`${bodyCellRightClass} font-extrabold text-green-600`} style={{ width: '8%' }}>{formatCurrency(p.netSalary)}</td>
                       </tr>
@@ -292,18 +299,19 @@ const MonthlyReport = ({ payslipHistory, startDate, endDate }) => {
                 </tbody>
                 <tfoot>
                   <tr>
-                    <td className={`${totalCellLeftClass} rounded-bl-lg`} style={{ width: '15%' }}>TOTALS</td>
-                    <td className={totalCellClass} style={{ width: '8%' }}>{formatCurrency(reportTotals.basicSalary)}</td>
+                    <td className={`${totalCellLeftClass} rounded-bl-lg sticky left-0 z-10 bg-gray-200`} style={{ width: '15%' }}>TOTALS</td>
+                    <td className={totalCellClass} style={{ width: '7%' }}>{formatCurrency(reportTotals.basicSalary)}</td>
                     <td className={totalCellClass} style={{ width: '8%' }}>{formatCurrency(reportTotals.costOfLivingAllowance)}</td>
-                    <td className={totalCellClass} style={{ width: '8%' }}>{formatCurrency(reportTotals.grossSalary)}</td>
-                    <td className={totalCellClass} style={{ width: '8%' }}>{formatCurrency(reportTotals.sssContribution)}</td>
-                    <td className={totalCellClass} style={{ width: '8%' }}>{formatCurrency(reportTotals.philhealthContribution)}</td>
-                    <td className={totalCellClass} style={{ width: '8%' }}>{formatCurrency(reportTotals.pagibigContribution)}</td>
-                    <td className={totalCellClass} style={{ width: '8%' }}>{formatCurrency(reportTotals.ceapContribution)}</td>
-                    <td className={totalCellClass} style={{ width: '8%' }}>{formatCurrency(reportTotals.totalLoans)}</td>
-                    <td className={totalCellClass} style={{ width: '8%' }}>{formatCurrency(reportTotals.canteen)}</td>
-                    <td className={totalCellClass} style={{ width: '8%' }}>{formatCurrency(reportTotals.tithings)}</td>
-                    <td className={totalCellClass} style={{ width: '8%' }}>{formatCurrency(reportTotals.otherDeductions)}</td>
+                    <td className={totalCellClass} style={{ width: '7%' }}>{formatCurrency(reportTotals.grossSalary)}</td>
+                    <td className={totalCellClass} style={{ width: '7%' }}>{formatCurrency(reportTotals.sssContribution)}</td>
+                    <td className={totalCellClass} style={{ width: '7%' }}>{formatCurrency(reportTotals.philhealthContribution)}</td>
+                    <td className={totalCellClass} style={{ width: '7%' }}>{formatCurrency(reportTotals.pagibigContribution)}</td>
+                    <td className={totalCellClass} style={{ width: '7%' }}>{formatCurrency(reportTotals.ceapContribution)}</td>
+                    <td className={totalCellClass} style={{ width: '7%' }}>{formatCurrency(reportTotals.totalLoans)}</td>
+                    <td className={totalCellClass} style={{ width: '7%' }}>{formatCurrency(reportTotals.canteen)}</td>
+                    <td className={totalCellClass} style={{ width: '7%' }}>{formatCurrency(reportTotals.tithings)}</td>
+                    <td className={totalCellClass} style={{ width: '7%' }}>{formatCurrency(reportTotals.late)}</td>
+                    <td className={totalCellClass} style={{ width: '7%' }}>{formatCurrency(reportTotals.otherDeductions)}</td>
                     <td className={totalCellClass} style={{ width: '8%' }}>{formatCurrency(reportTotals.totalDeductions)}</td>
                     <td className={`${totalCellClass} rounded-br-lg`} style={{ width: '8%' }}>{formatCurrency(reportTotals.netSalary)}</td>
                   </tr>
