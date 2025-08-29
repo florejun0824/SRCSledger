@@ -247,9 +247,9 @@ const MonthlyReport = ({ payslipHistory, startDate, endDate }) => {
           {aggregatedPayslips.length > 0 ? (
             <div className="overflow-x-auto relative rounded-lg shadow-inner border border-gray-300 max-h-[70vh]">
               <table className="w-full min-w-[1400px] table-fixed">
-                <thead className="sticky top-0 bg-white">
+                <thead className="sticky top-0 bg-white z-20">
                   <tr>
-                    <th className={`${tableHeaderClass} text-left rounded-tl-lg`} style={{ width: '15%' }}>Employee</th>
+                    <th className={`${tableHeaderClass} text-left rounded-tl-lg sticky left-0 bg-gray-100 z-20`} style={{ width: '15%' }}>Employee</th>
                     <th className={`${tableHeaderClass} text-right`} style={{ width: '8%' }}>Basic Salary</th>
                     <th className={`${tableHeaderClass} text-right`} style={{ width: '8%' }}>Cost of Living Allowance</th>
                     <th className={`${tableHeaderClass} text-right`} style={{ width: '8%' }}>Gross Salary</th>
@@ -269,7 +269,7 @@ const MonthlyReport = ({ payslipHistory, startDate, endDate }) => {
                   {aggregatedPayslips.map((p, index) => {
                     return (
                       <tr key={index} className="transition-colors duration-200 ease-in-out hover:bg-blue-50 even:bg-white odd:bg-gray-50/70">
-                        <td className={`${bodyCellClass} text-left`} style={{ width: '15%' }}>
+                        <td className={`${bodyCellClass} text-left sticky left-0 z-10 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/70'}`} style={{ width: '15%' }}>
                           <div className="font-semibold text-gray-900">{p.name}</div>
                           <div className="text-xs text-gray-500">{p.employeeId}</div>
                         </td>
@@ -292,7 +292,7 @@ const MonthlyReport = ({ payslipHistory, startDate, endDate }) => {
                 </tbody>
                 <tfoot>
                   <tr>
-                    <td className={`${totalCellLeftClass} rounded-bl-lg`} style={{ width: '15%' }}>TOTALS</td>
+                    <td className={`${totalCellLeftClass} rounded-bl-lg sticky left-0 z-10 bg-gray-200`} style={{ width: '15%' }}>TOTALS</td>
                     <td className={totalCellClass} style={{ width: '8%' }}>{formatCurrency(reportTotals.basicSalary)}</td>
                     <td className={totalCellClass} style={{ width: '8%' }}>{formatCurrency(reportTotals.costOfLivingAllowance)}</td>
                     <td className={totalCellClass} style={{ width: '8%' }}>{formatCurrency(reportTotals.grossSalary)}</td>
