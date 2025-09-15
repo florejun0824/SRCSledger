@@ -226,22 +226,37 @@ const EmployeeManagement = ({
       </div>
 
       {/* Payslip Deductions Section */}
-      <div className={sectionCardClass}>
-         <h3 className={sectionTitleClass}>Payslip Deductions</h3>
-         <p className="text-xs text-slate-500 -mt-4 mb-6">These fields are for the current payslip only and will not be saved to the employee's profile.</p>
-         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
-            {['SSSLoan', 'PagibigLoanSTL', 'PagibigLoanCL', 'PersonalLoan', 'CashAdvance', 'Canteen', 'Tithings'].map(field => {
-                const label = field.replace(/([A-Z])/g, ' $1').replace('STL', '-STL').replace('CL', '-CL').trim();
-                const name = field.charAt(0).toLowerCase() + field.slice(1);
-                return (
-                    <div key={name}>
-                        <label htmlFor={name} className={labelClass}>{label}</label>
-                        <input type="number" id={name} name={name} value={payslipDeductions[name] ?? ''} onChange={handleDeductionChange} placeholder="0.00" className={inputClass} />
-                    </div>
-                );
-            })}
-         </div>
-      </div>
+	  {/* Payslip Deductions Section */}
+	        <div className={sectionCardClass}>
+	           <h3 className={sectionTitleClass}>Payslip Deductions</h3>
+	           <p className="text-xs text-slate-500 -mt-4 mb-6">These fields are for the current payslip only and will not be saved to the employee's profile.</p>
+	           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
+	              {/* CORRECTED: The keys in this array now exactly match the state properties in App.js */}
+	              {['sssLoan', 'pagibigLoanSTL', 'pagibigLoanCL', 'personalLoan', 'cashAdvance', 'canteen', 'tithings'].map(field => {
+	                  // Helper to create a user-friendly label from the camelCase field name
+	                  const label = field
+	                      .replace(/([A-Z])/g, ' $1') // Add space before uppercase letters
+	                      .replace('STL', '-STL')      // Handle acronyms
+	                      .replace('CL', '-CL')        // Handle acronyms
+	                      .replace(/^./, (str) => str.toUpperCase()); // Capitalize first letter
+
+	                  return (
+	                      <div key={field}>
+	                          <label htmlFor={field} className={labelClass}>{label}</label>
+	                          <input 
+	                            type="number" 
+	                            id={field} 
+	                            name={field} // The 'name' now correctly matches the state key (e.g., "sssLoan")
+	                            value={payslipDeductions[field] ?? ''} 
+	                            onChange={handleDeductionChange} 
+	                            placeholder="0.00" 
+	                            className={inputClass} 
+	                          />
+	                      </div>
+	                  );
+	              })}
+	           </div>
+	        </div>
 
       {/* Other Deductions */}
       <div className={sectionCardClass}>
