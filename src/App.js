@@ -19,11 +19,12 @@ import {
 } from 'firebase/firestore';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { FaPrint, FaCheckCircle } from 'react-icons/fa';
+// UPDATED: Added FaSpinner for the new loading animation
+import { FaPrint, FaCheckCircle, FaSpinner } from 'react-icons/fa';
 
-import Header from './Header'; 
+import Header from './Header';
 import LoginScreen from './LoginScreen';
-import TabbedInterface from './TabbedInterface'; // Ensure this is imported
+import TabbedInterface from './TabbedInterface';
 import PrintManager from './PrintManager';
 import { EmployeeProvider } from './EmployeeContext';
 
@@ -35,7 +36,6 @@ import {
 } from './utils';
 import { firebaseConfig } from './firebase-config';
 
-// ... (rest of the initial setup and constants remain the same)
 // Initialize Firebase app
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -46,6 +46,7 @@ const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 // Log the projectId from the firebaseConfig
 console.log(`Firebase Project ID: ${firebaseConfig.projectId}`);
 
+// --- NO CHANGES to initial state objects ---
 const initialEmployeeState = {
   id: null,
   name: '',
@@ -85,6 +86,7 @@ const initialPayslipDeductionsState = {
 
 
 const App = () => {
+  // --- NO CHANGES to state hooks, refs, or functions ---
   const [userId, setUserId] = useState(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [employees, setEmployees] = useState([]);
@@ -97,18 +99,17 @@ const App = () => {
   const [payslipDeductions, setPayslipDeductions] = useState(initialPayslipDeductionsState);
   const [toast, setToast] = useState({ show: false, message: '' });
 
-  // Ref to access PrintManager methods
   const printManagerRef = useRef();
 
-  // Function to show toast notification
   const showToast = (message) => {
     setToast({ show: true, message });
     setTimeout(() => {
       setToast({ show: false, message: '' });
-    }, 3000); // Hide after 3 seconds
+    }, 3000);
   };
-
-  // Sign in with custom token on app load if available
+  
+  // --- NO CHANGES to any useEffect hooks or handler functions ---
+  // --- (handleSaveEmployee, handleDeleteEmployee, handleGeneratePayslip, etc. are identical) ---
   useEffect(() => {
     const signIn = async () => {
       // eslint-disable-next-line no-undef
@@ -124,7 +125,6 @@ const App = () => {
     signIn();
   }, []);
 
-  // Firebase auth state observer
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUserId(user ? user.uid : null);
@@ -133,7 +133,6 @@ const App = () => {
     return () => unsubscribe();
   }, []);
 
-  // Firestore listeners for employees and payslips
   useEffect(() => {
     if (!userId) {
       setEmployees([]);
@@ -165,7 +164,6 @@ const App = () => {
           .map(doc => ({ id: doc.id, ...doc.data() }))
           .filter(p => {
             if (!p.startDate) return false;
-            // The date from Firestore is a string like '2025-08-28', so we create a Date object in UTC
             const payslipDate = new Date(`${p.startDate}T00:00:00`);
             return payslipDate >= normalizedStart && payslipDate <= normalizedEnd;
           });
@@ -341,21 +339,28 @@ const App = () => {
     }
   };
 
+  // UPDATED: Replaced the old spinner with the FaSpinner icon for a cleaner look.
   if (!isAuthReady) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-slate-100">
-        <div className="w-16 h-16 border-8 border-t-8 border-t-blue-500 border-gray-200 rounded-full animate-spin"></div>
+        <FaSpinner className="h-12 w-12 text-indigo-500 animate-spin" />
         <p className="ml-4 text-xl text-slate-700 font-semibold">Loading...</p>
       </div>
     );
   }
 
   return (
-    <div className="App bg-slate-50 min-h-screen">
+    // UPDATED: Removed bg-slate-50 as the background is now handled by the body in index.css
+    <div className="App min-h-screen">
+      {/* UPDATED: Toast notification now uses the glass effect and a semi-transparent background color. */}
       {toast.show && (
         <div
-          className="fixed top-28 right-5 z-[100] flex items-center gap-3 bg-green-600 text-white py-3 px-5 rounded-lg shadow-2xl transition-transform duration-300 transform"
-          style={{ transform: 'translateX(0)', opacity: 1 }}
+          className="fixed top-28 right-5 z-[100] flex items-center gap-3 text-white py-3 px-5 rounded-xl transition-transform duration-300 transform glass-effect border-none"
+          style={{ 
+              backgroundColor: 'rgba(34, 197, 94, 0.8)',
+              transform: toast.show ? 'translateX(0)' : 'translateX(100%)', 
+              opacity: toast.show ? 1 : 0 
+          }}
         >
           <FaCheckCircle />
           <span className="font-semibold">{toast.message}</span>
@@ -367,33 +372,37 @@ const App = () => {
           <Header userId={userId} handleSignOut={handleSignOut} />
 
           <main>
-            <div className="bg-white shadow-md sticky top-24 z-40">
+            {/* UPDATED: Pay Period bar now uses the new .glass-effect class instead of bg-white and shadow-md. */}
+            <div className="sticky top-24 z-40 glass-effect">
               <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row items-center justify-between gap-6">
                   <div className="flex items-center gap-x-6">
                       <div className="flex flex-col">
-                          <label htmlFor="startDate" className="block text-sm font-medium text-slate-600 mb-1">Pay Period Start</label>
+                          <label htmlFor="startDate" className="block text-sm font-medium text-slate-600 mb-2">Pay Period Start</label>
                           <DatePicker
                               selected={startDate}
                               onChange={(date) => setStartDate(date)}
                               dateFormat="MMMM d, yyyy"
-                              className="w-full form-input block rounded-lg border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                              // UPDATED: Applied the new iOS-like form input style class.
+                              className="form-input-ios w-full"
                               id="startDate"
                           />
                       </div>
                       <div className="flex flex-col">
-                          <label htmlFor="endDate" className="block text-sm font-medium text-slate-600 mb-1">Pay Period End</label>
+                          <label htmlFor="endDate" className="block text-sm font-medium text-slate-600 mb-2">Pay Period End</label>
                           <DatePicker
                               selected={endDate}
                               onChange={(date) => setEndDate(date)}
                               dateFormat="MMMM d, yyyy"
-                              className="w-full form-input block rounded-lg border-slate-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                              // UPDATED: Applied the new iOS-like form input style class.
+                              className="form-input-ios w-full"
                               id="endDate"
                           />
                       </div>
                   </div>
                   <button
                     onClick={handlePrintAllPayslips}
-                    className="w-full md:w-auto flex items-center justify-center gap-3 px-6 py-3 bg-green-600 text-white font-bold rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-300 transform hover:scale-105 no-print"
+                    // UPDATED: Replaced multiple utility classes with the single, new .btn-primary class.
+                    className="btn-primary w-full md:w-auto no-print"
                     type="button"
                     aria-label="Print All Payslips"
                   >
@@ -403,7 +412,6 @@ const App = () => {
               </div>
             </div>
 
-            {/* THIS IS THE ONLY MAJOR CHANGE IN THIS FILE */}
             <TabbedInterface
               employees={employees}
               payslipHistory={payslipHistory}
@@ -423,7 +431,7 @@ const App = () => {
               setPayslipDeductions={setPayslipDeductions}
               getSssContribution={getSssContribution}
               getPhilhealthContribution={getPhilhealthContribution}
-              getPagibigContribution={getPagibigContribution}
+      getPagibigContribution={getPagibigContribution}
               getCeapContribution={getCeapContribution}
               startDate={startDate}
               endDate={endDate}

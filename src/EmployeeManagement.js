@@ -19,12 +19,12 @@ const EmployeeManagement = ({
   getPagibigContribution,
   getCeapContribution,
 }) => {
+  // --- NO CHANGES TO LOGIC, STATE, OR PROPS ---
   const { setSelectedPayslipData, setShowPayslipModal } = useContext(EmployeeContext);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const dropdownRef = useRef(null);
 
-  // Effect to handle clicking outside the dropdown to close it
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -37,7 +37,6 @@ const EmployeeManagement = ({
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    // Special handling for the employee name to always be in uppercase
     if (name === 'name') {
       setCurrentEmployee((prev) => ({ ...prev, [name]: value.toUpperCase() }));
     } else {
@@ -45,9 +44,7 @@ const EmployeeManagement = ({
     }
   };
 
-  // Effect to automatically compute statutory contributions when basicSalary changes
   useEffect(() => {
-    // Only auto-compute if basicSalary is a valid number
     if (currentEmployee.basicSalary && !isNaN(currentEmployee.basicSalary)) {
       const basic = parseFloat(currentEmployee.basicSalary);
       setCurrentEmployee(prev => ({
@@ -104,24 +101,22 @@ const EmployeeManagement = ({
 
   const isEditing = !!currentEmployee.id;
 
-  // Common styling classes for form elements
-  const inputClass = "block w-full rounded-lg border-slate-300 bg-slate-50 py-3 px-4 text-slate-800 shadow-sm focus:border-blue-500 focus:ring-blue-500 transition-colors duration-300";
-  const labelClass = "block text-sm font-medium text-slate-700 mb-1.5";
-  const sectionCardClass = "bg-slate-50/50 p-6 rounded-2xl border border-slate-200/80 shadow-sm";
-  const sectionTitleClass = "text-xl font-bold text-slate-800 mb-6";
+  const inputClass = "form-input-ios";
+  const labelClass = "block text-sm font-semibold text-slate-600 mb-2";
+  const sectionCardClass = "card-style";
+  const sectionTitleClass = "text-lg font-semibold text-slate-800 mb-4";
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
       {/* Employee Selector & Actions */}
-      <div className={`${sectionCardClass} -m-1`}>
+      <div className={sectionCardClass}>
         <div className="flex flex-col md:flex-row items-center gap-4">
-          {/* --- HIGHLY ENHANCED DROPDOWN --- */}
           <div className="relative flex-grow w-full" ref={dropdownRef}>
             <label htmlFor="employeeSelect" className={labelClass}>Select Employee</label>
             <button
               type="button"
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className={`${inputClass} flex items-center justify-between text-left font-semibold`}
+              className={`${inputClass} w-full flex items-center justify-between text-left font-semibold`}
             >
               <span className={currentEmployee.id ? 'text-slate-800' : 'text-slate-400'}>
                 {currentEmployee.name || 'Select from list or create new'}
@@ -129,7 +124,7 @@ const EmployeeManagement = ({
               <FaChevronDown className={`text-slate-400 transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
             <div
-              className={`absolute mt-2 w-full origin-top-right bg-white rounded-xl shadow-2xl z-20 ring-1 ring-black ring-opacity-5 focus:outline-none transition-all duration-200 ease-out ${isDropdownOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}
+              className={`absolute mt-2 w-full origin-top-right bg-white rounded-xl shadow-lg z-20 border border-slate-200/75 focus:outline-none transition-all duration-200 ease-out ${isDropdownOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}
             >
               <div className="p-2">
                 <div className="relative">
@@ -139,14 +134,14 @@ const EmployeeManagement = ({
                     placeholder="Search by name..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                    className="form-input-ios w-full pl-10"
                   />
                 </div>
               </div>
               <ul className="max-h-60 overflow-y-auto p-2">
                 <li
                   onClick={() => handleSelectAndClose('')}
-                  className="px-3 py-2.5 text-sm cursor-pointer rounded-lg hover:bg-blue-50 text-slate-700 font-semibold"
+                  className="px-3 py-2.5 text-sm cursor-pointer rounded-lg hover:bg-indigo-50 text-indigo-600 font-semibold"
                 >
                   -- New Employee --
                 </li>
@@ -155,7 +150,7 @@ const EmployeeManagement = ({
                     <li
                       key={emp.id}
                       onClick={() => handleSelectAndClose(emp.id)}
-                      className="flex items-center justify-between text-sm p-3 cursor-pointer rounded-lg hover:bg-blue-50 hover:scale-[1.02] transition-all duration-150"
+                      className="flex items-center justify-between text-sm p-3 cursor-pointer rounded-lg hover:bg-slate-100 transition-colors duration-150"
                     >
                       <span className="font-medium text-slate-800">{emp.name}</span>
                       {emp.employeeId && <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">{emp.employeeId}</span>}
@@ -167,10 +162,9 @@ const EmployeeManagement = ({
               </ul>
             </div>
           </div>
-          {/* --- END ENHANCED DROPDOWN --- */}
           <button
             onClick={resetForm}
-            className="w-full md:w-auto mt-4 md:mt-7 flex-shrink-0 px-5 py-3 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2"
+            className="w-full md:w-auto mt-4 md:mt-8 flex-shrink-0 px-5 py-3 bg-slate-100 text-slate-700 font-semibold rounded-lg border border-slate-200 hover:bg-slate-200 transition-colors duration-200 flex items-center justify-center gap-2"
           >
             <FaUserPlus />
             <span>New Profile</span>
@@ -201,10 +195,10 @@ const EmployeeManagement = ({
         </div>
       </div>
 
-      {/* Statutory Contributions Section -- NOW EDITABLE */}
+      {/* Statutory Contributions Section */}
       <div className={sectionCardClass}>
         <h3 className={sectionTitleClass}>Statutory Contributions</h3>
-        <p className="text-xs text-slate-500 -mt-4 mb-6">Auto-computed from Basic Salary. Can be manually overridden.</p>
+        <p className="text-xs text-slate-500 -mt-2 mb-4">Auto-computed from Basic Salary. Can be manually overridden.</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
               <label htmlFor="sssContribution" className={labelClass}>SSS</label>
@@ -226,37 +220,21 @@ const EmployeeManagement = ({
       </div>
 
       {/* Payslip Deductions Section */}
-	  {/* Payslip Deductions Section */}
-	        <div className={sectionCardClass}>
-	           <h3 className={sectionTitleClass}>Payslip Deductions</h3>
-	           <p className="text-xs text-slate-500 -mt-4 mb-6">These fields are for the current payslip only and will not be saved to the employee's profile.</p>
-	           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
-	              {/* CORRECTED: The keys in this array now exactly match the state properties in App.js */}
-	              {['sssLoan', 'pagibigLoanSTL', 'pagibigLoanCL', 'personalLoan', 'cashAdvance', 'canteen', 'tithings'].map(field => {
-	                  // Helper to create a user-friendly label from the camelCase field name
-	                  const label = field
-	                      .replace(/([A-Z])/g, ' $1') // Add space before uppercase letters
-	                      .replace('STL', '-STL')      // Handle acronyms
-	                      .replace('CL', '-CL')        // Handle acronyms
-	                      .replace(/^./, (str) => str.toUpperCase()); // Capitalize first letter
-
-	                  return (
-	                      <div key={field}>
-	                          <label htmlFor={field} className={labelClass}>{label}</label>
-	                          <input 
-	                            type="number" 
-	                            id={field} 
-	                            name={field} // The 'name' now correctly matches the state key (e.g., "sssLoan")
-	                            value={payslipDeductions[field] ?? ''} 
-	                            onChange={handleDeductionChange} 
-	                            placeholder="0.00" 
-	                            className={inputClass} 
-	                          />
-	                      </div>
-	                  );
-	              })}
-	           </div>
-	        </div>
+      <div className={sectionCardClass}>
+         <h3 className={sectionTitleClass}>Payslip Deductions</h3>
+         <p className="text-xs text-slate-500 -mt-2 mb-4">These fields are for the current payslip only and will not be saved to the employee's profile.</p>
+         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
+            {['sssLoan', 'pagibigLoanSTL', 'pagibigLoanCL', 'personalLoan', 'cashAdvance', 'canteen', 'tithings'].map(field => {
+                const label = field.replace(/([A-Z])/g, ' $1').replace('STL', '-STL').replace('CL', '-CL').replace(/^./, (str) => str.toUpperCase());
+                return (
+                    <div key={field}>
+                        <label htmlFor={field} className={labelClass}>{label}</label>
+                        <input type="number" id={field} name={field} value={payslipDeductions[field] ?? ''} onChange={handleDeductionChange} placeholder="0.00" className={inputClass} />
+                    </div>
+                );
+            })}
+         </div>
+      </div>
 
       {/* Other Deductions */}
       <div className={sectionCardClass}>
@@ -266,50 +244,51 @@ const EmployeeManagement = ({
                   <div key={index} className="flex flex-col sm:flex-row gap-4 items-center">
                       <input type="text" name="name" value={deduction.name} onChange={(e) => handleOtherDeductionChange(index, e)} placeholder="Deduction Name" className={`${inputClass} flex-1`} />
                       <input type="number" name="amount" value={deduction.amount} onChange={(e) => handleOtherDeductionChange(index, e)} placeholder="Amount" className={`${inputClass} w-full sm:w-40`} />
-                      <button onClick={() => handleRemoveOtherDeduction(index)} className="p-3 text-red-500 hover:text-red-700 transition duration-300 rounded-full hover:bg-red-100 self-center sm:self-auto" title="Remove deduction">
+                      <button onClick={() => handleRemoveOtherDeduction(index)} className="p-3 text-red-500 hover:text-red-700 transition duration-300 rounded-full hover:bg-red-100/50 self-center sm:self-auto" title="Remove deduction">
                           <FaTimes className="h-5 w-5" />
                       </button>
                   </div>
               ))}
           </div>
-          <button onClick={handleAddOtherDeduction} className="mt-6 flex items-center gap-2 text-blue-600 hover:text-blue-800 text-sm font-semibold transition-colors rounded-lg p-2 hover:bg-blue-50">
+          <button onClick={handleAddOtherDeduction} className="mt-6 flex items-center gap-2 text-indigo-600 hover:text-indigo-800 text-sm font-semibold transition-colors rounded-lg p-2 hover:bg-indigo-50">
               <FaPlus />
               <span>Add another deduction</span>
           </button>
       </div>
       
       {/* Action Buttons */}
-      <div className="mt-10 pt-6 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4">
+      <div className="mt-8 pt-6 border-t border-slate-200/80 flex flex-col md:flex-row justify-between items-center gap-4">
+          {/* MODIFIED: Smaller padding and font size for all buttons in this section */}
           <button
             onClick={handleGeneratePayslipClick}
             disabled={!isEditing}
-            className="w-full md:w-auto px-8 py-4 bg-blue-600 text-white font-bold rounded-lg shadow-lg hover:shadow-xl hover:bg-blue-700 transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-3 text-lg disabled:bg-slate-400 disabled:cursor-not-allowed disabled:scale-100"
+            className="btn-primary w-full md:w-auto text-sm font-semibold px-5 py-2.5 flex items-center justify-center gap-2 disabled:bg-slate-400 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none"
           >
-              <FaFileInvoiceDollar />
+              <FaFileInvoiceDollar className="h-4 w-4" />
               <span>Generate Payslip</span>
           </button>
-          <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+          <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
               <button
                   onClick={() => handleSaveEmployee()}
-                  className="w-full sm:w-auto px-6 py-3 bg-green-600 text-white font-bold rounded-lg shadow-lg hover:shadow-xl hover:bg-green-700 transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2"
+                  className="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-green-500 to-green-600 text-white text-sm font-bold rounded-lg shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
               >
-                  <FaSave />
-                  <span>{isEditing ? 'Update Profile' : 'Save Employee'}</span>
+                  <FaSave className="h-4 w-4" />
+                  <span>{isEditing ? 'Update Profile' : 'Save'}</span>
               </button>
               {isEditing && (
                   <button
                       onClick={() => handleDeleteEmployee(currentEmployee.id)}
-                      className="w-full sm:w-auto px-6 py-3 bg-red-600 text-white font-bold rounded-lg shadow-lg hover:shadow-xl hover:bg-red-700 transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2"
+                      className="w-full sm:w-auto px-5 py-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white text-sm font-bold rounded-lg shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5 flex items-center justify-center gap-2"
                   >
-                      <FaTrashAlt />
+                      <FaTrashAlt className="h-4 w-4" />
                       <span>Delete</span>
                   </button>
               )}
                <button
                   onClick={resetForm}
-                  className="w-full sm:w-auto px-6 py-3 bg-slate-400 text-white font-bold rounded-lg shadow-lg hover:shadow-xl hover:bg-slate-500 transition-all duration-300 transform hover:scale-105 flex items-center justify-center gap-2"
+                  className="w-full sm:w-auto px-5 py-2.5 bg-slate-100 text-slate-700 text-sm font-semibold rounded-lg border border-slate-200 hover:bg-slate-200 transition-colors duration-200 flex items-center justify-center gap-2"
                 >
-                  <FaUndo />
+                  <FaUndo className="h-4 w-4" />
                   <span>Clear</span>
                 </button>
           </div>
