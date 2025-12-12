@@ -1,30 +1,118 @@
+/* src/index.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Import Google Font - Inter */
-/* This ensures the 'Inter' font is available for your entire application. */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-/* Basic body styles */
 body {
-  font-family: 'Inter', sans-serif; /* Apply the Inter font globally */
+  font-family: 'Inter', sans-serif;
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  /* A subtle gradient background provides depth */
+  background-color: #f0f2f5; 
+  background-image: radial-gradient(circle at top left, #ffffff, #eef1f5 100%);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Custom keyframe animation for a slow, subtle bounce effect */
-@keyframes bounce-slow {
+/* --- iOS 18 Inspired UI Kit --- */
+
+/* Glassmorphism Effect for sticky headers/toolbars */
+.glass-effect {
+  background-color: rgba(255, 255, 255, 0.6); /* Semi-transparent white */
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  border-bottom: 1px solid rgba(209, 213, 219, 0.3); /* Faint border */
+}
+
+/* Modern Card Style */
+.card-style {
+  background-color: #ffffff;
+  border-radius: 1.25rem; /* 20px for a softer, iOS-like feel */
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.08); /* Softer, diffused shadow */
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  padding: 2rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card-style:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 36px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* Updated Form Input Style */
+.form-input-ios {
+  background-color: #f3f4f6; /* Light gray background */
+  border: none;
+  border-radius: 0.75rem; /* 12px */
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #374151;
+  transition: box-shadow 0.2s ease, background-color 0.2s ease;
+  width: 100%; /* <-- ADD THIS LINE */
+}
+
+.form-input-ios:focus {
+  outline: none;
+  background-color: #fff;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.4); /* Focus ring like in iOS */
+}
+
+/* Primary Button Style */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem; /* 12px */
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(145deg, #4f46e5, #7c3aed);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+  transition: all 0.3s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Custom keyframe animation for a subtle pulse/notification */
+@keyframes subtle-pulse {
   0%, 100% {
-    transform: translateY(0); /* Start and end at original position */
+    transform: scale(1);
+    opacity: 1;
   }
   50% {
-    transform: translateY(-5px); /* Move up slightly at 50% of the animation */
+    transform: scale(1.05);
+    opacity: 0.95;
   }
 }
 
-/* Apply the custom animation to elements with this class */
-.animate-bounce-slow {
-  animation: bounce-slow 4s infinite ease-in-out; /* 4-second duration, infinite loop, smooth easing */
+.animate-subtle-pulse {
+  animation: subtle-pulse 2s infinite ease-in-out;
+}
+/* Add this to index.css */
+.btn-secondary {
+  /* ... (similar structure to btn-primary) ... */
+  font-weight: 500;
+  color: #4b5563; /* Gray text */
+  background-color: #e5e7eb; /* Light gray background */
+  box-shadow: none;
+}
+.btn-secondary:hover {
+  background-color: #d1d5db;
+  transform: none; /* No lift on hover for secondary actions */
+  box-shadow: none;
 }

@@ -1,9 +1,13 @@
-import React from 'react';
+// src/PayslipGenerator.js
+import React, { useContext } from 'react';
 import PayslipDisplay from './PayslipDisplay';
-import { getSssContribution, getPhilhealthContribution, getPagibigContribution, getCeapContribution } from './utils';
+// Removed unused contribution calculation functions
+import { EmployeeContext } from './EmployeeContext'; // Import the EmployeeContext
 
-const PayslipGenerator = ({ employee, startDate, endDate, handleGeneratePayslip, payslip, setPayslip }) => {
+const PayslipGenerator = ({ employee, startDate, endDate, handleGeneratePayslip }) => {
   if (!employee) return null;
+
+  const { generatedPayslip, setGeneratedPayslip } = useContext(EmployeeContext); // Use useContext to get the setter function
 
   const handleGenerate = () => {
     // This function will be called from the parent component
@@ -20,53 +24,59 @@ const PayslipGenerator = ({ employee, startDate, endDate, handleGeneratePayslip,
     const canteen = parseFloat(employee.canteen) || 0;
     
     // Other Deductions
-    const otherDeductions = (employee.otherDeductions || []).reduce((sum, ded) => sum + (parseFloat(ded.amount) || 0), 0);
+    const otherDeductionsTotal = (employee.otherDeductions || []).reduce((sum, ded) => sum + (parseFloat(ded.amount) || 0), 0);
     const tithings = parseFloat(employee.tithings) || 0; // Assuming tithings is part of employee state or passed separately
 
-    // Social Contributions
-    const sssContribution = getSssContribution(basic);
-    const philhealthContribution = getPhilhealthContribution(basic);
-    const pagibigContribution = getPagibigContribution(basic);
-    const ceapContribution = getCeapContribution(basic);
+    // === FIX: Use statutory contributions directly from the employee object ===
+    // This ensures that any manually edited values are used in the calculation.
+    const sssContribution = parseFloat(employee.sssContribution) || 0;
+    const philhealthContribution = parseFloat(employee.philhealthContribution) || 0;
+    const pagibigContribution = parseFloat(employee.pagibigContribution) || 0;
+    const ceapContribution = parseFloat(employee.ceapContribution) || 0;
 
     // Totals
     const grossSalary = basic + costOfLivingAllowance;
-    const totalDeductions = sssContribution + philhealthContribution + pagibigContribution + ceapContribution + sssLoan + pagibigLoanSTL + pagibigLoanCL + personalLoan + cashAdvance + canteen + otherDeductions + tithings;
+    const totalDeductions = sssContribution + philhealthContribution + pagibigContribution + ceapContribution + sssLoan + pagibigLoanSTL + pagibigLoanCL + personalLoan + cashAdvance + canteen + otherDeductionsTotal + tithings;
     const netSalary = grossSalary - totalDeductions;
 
-    const newPayslip = {
-      name: employee.name,
-      employeeId: employee.employeeId,
-      // Use the dates passed as props instead of local state
-      startDate: startDate,
-      endDate: endDate,
-      basicSalary: basic,
-      costOfLivingAllowance: costOfLivingAllowance,
-      grossSalary,
-      sssContribution,
-      philhealthContribution,
-      pagibigContribution,
-      ceapContribution,
-      tithings,
-      pagibigLoanSTL,
-      pagibigLoanCL,
-      sssLoan,
-      personalLoan,
-      cashAdvance,
-      canteen,
-      otherDeductions: employee.otherDeductions,
-      totalDeductions,
-      netSalary,
-    };
-    
-    setPayslip(newPayslip);
+	const formatDate = (date) => {
+	  if (!date) return '';
+	  if (date instanceof Date) return date.toISOString().split('T')[0]; // YYYY-MM-DD
+	  return date; // assume already string
+	};
+
+	const newPayslip = {
+	  name: employee.name,
+	  employeeId: employee.employeeId,
+	  startDate: formatDate(startDate),
+	  endDate: formatDate(endDate),
+	  basicSalary: basic,
+	  costOfLivingAllowance,
+	  grossSalary,
+	  sssContribution,
+	  philhealthContribution,
+	  pagibigContribution,
+	  ceapContribution,
+	  tithings,
+	  pagibigLoanSTL,
+	  pagibigLoanCL,
+	  sssLoan,
+	  personalLoan,
+	  cashAdvance,
+	  canteen,
+	  otherDeductions: employee.otherDeductions,
+	  totalDeductions,
+	  netSalary,
+	};
+
+    // Update the global state instead of the local state
+    setGeneratedPayslip(newPayslip);
   };
 
   return (
     <div>
-      {/* ... other PayslipGenerator JSX, if any ... */}
       <button onClick={handleGenerate}>Generate Payslip</button>
-      {payslip && <PayslipDisplay payslipData={payslip} />}
+      {generatedPayslip && <PayslipDisplay payslipData={generatedPayslip} />}
     </div>
   );
 };
