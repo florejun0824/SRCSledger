@@ -43,6 +43,12 @@ const Auth = ({ onAuthChange, children }) => {
   return (
     <div>
       <div className="bg-indigo-600 p-6 text-white text-center rounded-t-2xl relative">
+        {/* Logo Added Here */}
+        <img 
+          src="/1.png" 
+          alt="Logo" 
+          className="h-20 w-20 mx-auto mb-3 rounded-full border-4 border-indigo-400 shadow-lg"
+        />
         <h1 className="text-3xl sm:text-4xl font-bold mb-2">SRCS Bookkeeper's System</h1>
         <p className="text-indigo-200 text-lg">Manage employees and generate detailed payslips</p>
         <p className="text-sm text-indigo-200 mt-2">
